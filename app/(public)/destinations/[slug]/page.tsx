@@ -1,0 +1,92 @@
+import { Metadata } from "next";
+import Link from "next/link";
+import { Container } from "@/components/ui/Container";
+import { Button } from "@/components/ui/Button";
+import { getDestinationBySlug } from "@/lib/data/public";
+import { otherDestinations } from "@/lib/homeData";
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateStaticParams() {
+  try {
+    const { getDestinations } = await import("@/lib/data/public");
+    const destinations = await getDestinations();
+    const other = destinations.filter((d) => !d.focus_inbound);
+    return other.map((d) => ({ slug: d.slug }));
+  } catch {
+    return otherDestinations.map((d) => ({ slug: d.slug }));
+  }
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const destination = await getDestinationBySlug(slug);
+  const fallback = otherDestinations.find((d) => d.slug === slug);
+  const name = destination?.name ?? fallback?.name;
+  const desc = destination?.summary ?? fallback?.tagline;
+  return {
+    title: name ? `${name} | Vacation Vibez` : "Destination | Vacation Vibez",
+    description: name && desc ? `Explore ${name} with Vacation Vibez. ${desc}.` : "Discover extraordinary destinations with Vacation Vibez.",
+  };
+}
+
+export default async function DestinationPage({ params }: PageProps) {
+  const { slug } = await params;
+  const destination = await getDestinationBySlug(slug);
+  const fallback = otherDestinations.find((d) => d.slug === slug);
+
+  if (!destination && !fallback) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center bg-sand">
+        <Container className="text-center">
+          <h1 className="font-serif text-4xl font-semibold text-charcoal">Destination Not Found</h1>
+          <p className="mt-4 text-charcoal/60">We couldn&apos;t find the destination you&apos;re looking for.</p>
+          <div className="mt-8">
+            <Button as="a" href="/">Return Home</Button>
+          </div>
+        </Container>
+      </div>
+    );
+  }
+
+  const name = destination?.name ?? fallback!.name;
+  const tagline = destination?.summary ?? fallback!.tagline;
+  const image = destination?.hero_image_url ?? fallback!.image;
+
+  return (
+    <>
+      <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden lg:min-h-[70vh]">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: image ? `url(${image})` : undefined }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/60 via-charcoal/40 to-charcoal/80" />
+        <Container className="relative z-10 text-center">
+          <p className="text-sm uppercase tracking-widest text-gold">{tagline}</p>
+          <h1 className="mt-4 font-serif text-5xl font-semibold text-white sm:text-6xl lg:text-7xl">{name}</h1>
+        </Container>
+      </section>
+
+      <section className="bg-sand py-20 lg:py-32">
+        <Container className="text-center">
+          <div className="mx-auto max-w-2xl">
+            <h2 className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">Coming Soon</h2>
+            <p className="mt-4 text-lg text-charcoal/60">
+              We&apos;re crafting extraordinary experiences for {name}. Sign up to be the first to know.
+            </p>
+            <div className="mt-12">
+              <Link href="/" className="inline-flex items-center gap-2 text-teal hover:text-gold">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        </Container>
+      </section>
+    </>
+  );
+}

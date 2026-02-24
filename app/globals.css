@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    @apply bg-sand text-charcoal antialiased;
+  }
+
+  ::selection {
+    @apply bg-gold/30 text-charcoal;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-gold;
+  }
+}
+
+@layer components {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer utilities {
+  .gradient-hero {
+    background: linear-gradient(
+      135deg,
+      rgba(11, 59, 60, 0.7) 0%,
+      rgba(200, 162, 74, 0.4) 100%
+    );
+  }
+
+  .gradient-warm {
+    background: linear-gradient(
+      135deg,
+      rgba(200, 162, 74, 0.1) 0%,
+      rgba(245, 241, 232, 1) 100%
+    );
+  }
+
+  .gradient-cta {
+    background: linear-gradient(
+      135deg,
+      #0B3B3C 0%,
+      #164849 50%,
+      #0B3B3C 100%
+    );
+  }
+}
