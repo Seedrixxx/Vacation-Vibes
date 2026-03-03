@@ -1,5 +1,5 @@
 import { Container } from "@/components/ui/Container";
-import { footerColumns, socialLinks } from "@/lib/homeData";
+import { footerColumns, footerContact, socialLinks } from "@/lib/homeData";
 
 const socialIconMap: Record<string, JSX.Element> = {
   instagram: (
@@ -45,8 +45,7 @@ export function Footer() {
               Vacation Vibez
             </a>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">
-              Crafting unforgettable journeys through Sri Lanka and beyond.
-              Your dream adventure awaits.
+              Sri Lanka. In every vibe.
             </p>
 
             {/* Social Links */}
@@ -84,6 +83,48 @@ export function Footer() {
               </ul>
             </div>
           ))}
+
+          {/* Contact */}
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/90">
+              Contact
+            </h3>
+            <ul className="mt-4 space-y-2 text-sm text-white/60">
+              <li>
+                <a
+                  href={`mailto:${footerContact.email}`}
+                  className="transition-colors hover:text-gold"
+                >
+                  {footerContact.email}
+                </a>
+              </li>
+              <li>
+                Sri Lanka:{" "}
+                <a
+                  href={`tel:${footerContact.sriLanka[0].replace(/\s/g, "")}`}
+                  className="transition-colors hover:text-gold"
+                >
+                  {footerContact.sriLanka[0]}
+                </a>
+                {" | "}
+                <a
+                  href={`tel:${footerContact.sriLanka[1].replace(/\s/g, "")}`}
+                  className="transition-colors hover:text-gold"
+                >
+                  {footerContact.sriLanka[1]}
+                </a>
+              </li>
+              <li>
+                UAE:{" "}
+                <a
+                  href={`tel:${footerContact.uae.replace(/\s/g, "")}`}
+                  className="transition-colors hover:text-gold"
+                >
+                  {footerContact.uae}
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Bottom Bar */}
@@ -94,13 +135,13 @@ export function Footer() {
             </p>
             <div className="flex gap-6">
               <a
-                href="#"
+                href="/privacy"
                 className="text-sm text-white/50 transition-colors hover:text-white"
               >
                 Privacy Policy
               </a>
               <a
-                href="#"
+                href="/terms"
                 className="text-sm text-white/50 transition-colors hover:text-white"
               >
                 Terms of Service

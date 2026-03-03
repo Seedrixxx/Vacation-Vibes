@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/motion/Reveal";
@@ -22,10 +21,10 @@ export function HomeBuildHighlight() {
         <Reveal>
           <div className="text-center">
             <h2 id="trip-designer-heading" className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">
-              Build Your Trip Your Way
+              Build Your Custom Sri Lanka Trip
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-charcoal/70">
-              Answer a few questions and get a personalized Trip Blueprint in moments.
+            <p className="mx-auto mt-4 max-w-2xl text-charcoal/70">
+              Every traveler has a different vibe. Tell us your travel dates, preferences, and budget — and our Sri Lanka travel experts will design a personalized itinerary tailored just for you.
             </p>
           </div>
         </Reveal>
@@ -61,7 +60,7 @@ export function HomeBuildHighlight() {
         <Reveal>
           <div className="mt-12 flex justify-center">
             <Button as="a" href="/build-your-trip" size="lg">
-              Start Trip Designer
+              Build My Sri Lanka Trip
             </Button>
           </div>
         </Reveal>

@@ -31,7 +31,7 @@
   }
 
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-gold;
+    @apply outline-2 outline-offset-2 outline-orange;
   }
 }
 
@@ -45,25 +45,25 @@
   .gradient-hero {
     background: linear-gradient(
       135deg,
-      rgba(11, 59, 60, 0.7) 0%,
-      rgba(200, 162, 74, 0.4) 100%
+      rgba(40, 67, 123, 0.7) 0%,
+      rgba(213, 188, 130, 0.4) 100%
     );
   }
 
   .gradient-warm {
     background: linear-gradient(
       135deg,
-      rgba(200, 162, 74, 0.1) 0%,
-      rgba(245, 241, 232, 1) 100%
+      rgba(213, 188, 130, 0.1) 0%,
+      #ffffff 100%
     );
   }
 
   .gradient-cta {
     background: linear-gradient(
       135deg,
-      #0B3B3C 0%,
-      #164849 50%,
-      #0B3B3C 100%
+      #28437b 0%,
+      #203662 50%,
+      #28437b 100%
     );
   }
 }

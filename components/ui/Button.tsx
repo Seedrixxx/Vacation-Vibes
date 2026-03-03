@@ -28,12 +28,12 @@ type ButtonProps = ButtonAsButton | ButtonAsAnchor;
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-gold text-charcoal hover:bg-gold-600 shadow-soft hover:shadow-elegant",
+    "bg-orange text-white hover:bg-orange-600 shadow-soft hover:shadow-elegant",
   secondary:
     "bg-teal text-white hover:bg-teal-600 shadow-soft hover:shadow-elegant",
   outline:
-    "border-2 border-charcoal/20 text-charcoal hover:border-gold hover:text-gold bg-transparent",
-  ghost: "text-charcoal hover:text-gold bg-transparent hover:bg-charcoal/5",
+    "border-2 border-charcoal/20 text-charcoal hover:border-orange hover:text-orange bg-transparent",
+  ghost: "text-charcoal hover:text-orange bg-transparent hover:bg-charcoal/5",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -51,7 +51,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const classes = clsx(
-    "inline-flex items-center justify-center font-medium rounded-full transition-all duration-300 focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+    "inline-flex items-center justify-center font-medium rounded-full transition-all duration-300 focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
     variantClasses[variant],
     sizeClasses[size],
     className

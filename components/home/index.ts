@@ -5,6 +5,7 @@ export { ExperiencesGrid } from "./ExperiencesGrid";
 export { Packages } from "./Packages";
 export { HowItWorks } from "./HowItWorks";
 export { Testimonials } from "./Testimonials";
+export { AboutVacationVibes } from "./AboutVacationVibes";
 export { BeyondSriLanka } from "./BeyondSriLanka";
 export { Services } from "./Services";
 export { FinalCTA } from "./FinalCTA";

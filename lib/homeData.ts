@@ -21,24 +21,28 @@ export interface WhyUsPoint {
 
 export const whyUsPoints: WhyUsPoint[] = [
   {
-    icon: "map",
-    title: "Local Expertise",
-    description: "Deep connections with Sri Lanka's hidden gems and authentic experiences.",
+    icon: "wildlife",
+    title: "Wildlife Safaris",
+    description:
+      "Experience Sri Lanka safari tours in Yala and Minneriya National Parks — home to leopards, elephants, and rare birdlife.",
   },
   {
-    icon: "hotel",
-    title: "Curated Stays",
-    description: "Handpicked boutique hotels and luxury resorts that define elegance.",
+    icon: "train",
+    title: "Hill Country & Scenic Trains",
+    description:
+      "Travel through Ella and Nuwara Eliya on one of the world's most beautiful train journeys across tea plantations and mountain views.",
   },
   {
-    icon: "compass",
-    title: "Authentic Experiences",
-    description: "Cultural immersions designed around your interests and passions.",
+    icon: "temple",
+    title: "Culture & UNESCO Heritage",
+    description:
+      "Climb Sigiriya Rock Fortress, visit the Temple of the Tooth in Kandy, and explore Sri Lanka's ancient kingdoms.",
   },
   {
-    icon: "calendar",
-    title: "Seamless Planning",
-    description: "Every detail thoughtfully arranged so you can simply enjoy.",
+    icon: "beach",
+    title: "Beaches & Coastal Escapes",
+    description:
+      "Relax along Sri Lanka's southern beaches in Galle, Bentota, and Mirissa — ideal for honeymoon and leisure travel.",
   },
 ];
 
@@ -51,34 +55,47 @@ export interface Experience {
 
 export const sriLankaExperiences: Experience[] = [
   {
-    id: "wildlife",
-    title: "Wildlife Safaris",
-    description: "Encounter leopards, elephants, and exotic birds in their natural sanctuaries.",
+    id: "leopard-safari-yala",
+    title: "Leopard Safari in Yala",
+    description: "Guided jeep safaris in Sri Lanka's most famous wildlife park.",
     image: "/images/experiences/wildlife.jpg",
   },
   {
-    id: "tea-country",
-    title: "Tea Country Escapes",
-    description: "Wander through emerald hills and discover the art of Ceylon tea.",
+    id: "nine-arches-train",
+    title: "Nine Arches Bridge & Scenic Train Ride",
+    description: "Capture Sri Lanka's iconic railway journey through tea country.",
     image: "/images/experiences/tea-country.jpg",
   },
   {
-    id: "cultural",
-    title: "Cultural Heritage",
-    description: "Ancient temples, sacred cities, and stories etched in stone.",
+    id: "sigiriya-rock",
+    title: "Sigiriya Rock Climb",
+    description: "Climb the ancient rock fortress and witness panoramic island views.",
     image: "/images/experiences/cultural.jpg",
   },
   {
-    id: "beach",
-    title: "Beach Luxury",
-    description: "Golden shores and turquoise waters where time stands still.",
+    id: "tea-plantation",
+    title: "Tea Plantation Visit",
+    description: "Walk through Ceylon tea estates and experience traditional tea-making.",
+    image: "/images/experiences/tea-country.jpg",
+  },
+  {
+    id: "southern-beach-sunset",
+    title: "Southern Beach Sunset",
+    description: "Unwind on Sri Lanka's golden coastline with boutique beach stays.",
     image: "/images/experiences/beach.jpg",
+  },
+  {
+    id: "village-cultural",
+    title: "Village & Cultural Immersion",
+    description: "Connect with local life through authentic Sri Lankan village experiences.",
+    image: "/images/experiences/cultural.jpg",
   },
 ];
 
 export interface Package {
   id: string;
   title: string;
+  slug: string;
   duration: string;
   startingPrice: number;
   currency: string;
@@ -91,72 +108,78 @@ export interface Package {
 
 export const sriLankaPackages: Package[] = [
   {
-    id: "essence-of-ceylon",
-    title: "Essence of Ceylon",
-    duration: "7 Days",
+    id: "family-tour",
+    title: "Sri Lanka Family Tour",
+    slug: "family-tour",
+    duration: "8 Days",
     startingPrice: 2499,
     currency: "USD",
-    highlights: ["Sigiriya Rock", "Kandy Temple", "Yala Safari"],
+    highlights: ["Wildlife", "Culture", "Hill country", "Beach"],
     rating: 4.9,
     reviewCount: 127,
     image: "/images/packages/essence-ceylon.jpg",
     featured: true,
   },
   {
-    id: "tea-trails",
-    title: "Tea Trails & Highlands",
-    duration: "5 Days",
-    startingPrice: 1899,
-    currency: "USD",
-    highlights: ["Train Journey", "Tea Plantations", "Ella Rock"],
-    rating: 4.8,
-    reviewCount: 89,
-    image: "/images/packages/tea-trails.jpg",
-  },
-  {
-    id: "coastal-serenity",
-    title: "Coastal Serenity",
-    duration: "6 Days",
-    startingPrice: 2199,
-    currency: "USD",
-    highlights: ["Galle Fort", "Whale Watching", "Beach Resorts"],
-    rating: 4.9,
-    reviewCount: 156,
-    image: "/images/packages/coastal.jpg",
-  },
-  {
-    id: "wildlife-expedition",
-    title: "Wildlife Expedition",
-    duration: "8 Days",
-    startingPrice: 2899,
-    currency: "USD",
-    highlights: ["Yala Leopards", "Udawalawe Elephants", "Sinharaja Rainforest"],
-    rating: 4.7,
-    reviewCount: 64,
-    image: "/images/packages/wildlife.jpg",
-  },
-  {
-    id: "honeymoon-bliss",
-    title: "Honeymoon Bliss",
+    id: "honeymoon-tour",
+    title: "Sri Lanka Honeymoon Tour",
+    slug: "honeymoon-tour",
     duration: "10 Days",
     startingPrice: 3499,
     currency: "USD",
-    highlights: ["Private Villas", "Sunset Dinners", "Couples Spa"],
+    highlights: ["Boutique stays", "Scenic landscapes", "Private experiences"],
     rating: 5.0,
     reviewCount: 42,
     image: "/images/packages/honeymoon.jpg",
     featured: true,
   },
   {
-    id: "adventure-seeker",
-    title: "Adventure Seeker",
-    duration: "9 Days",
-    startingPrice: 2699,
+    id: "solo-adventure",
+    title: "Sri Lanka Solo Adventure",
+    slug: "solo-adventure",
+    duration: "7 Days",
+    startingPrice: 2199,
     currency: "USD",
-    highlights: ["White Water Rafting", "Hiking", "Surfing"],
+    highlights: ["Guided experiences", "Seamless planning"],
     rating: 4.8,
-    reviewCount: 73,
+    reviewCount: 89,
     image: "/images/packages/adventure.jpg",
+  },
+  {
+    id: "grand-tour-12day",
+    title: "11 Nights / 12 Days Grand Sri Lanka Tour",
+    slug: "grand-tour-12day",
+    duration: "12 Days",
+    startingPrice: 3999,
+    currency: "USD",
+    highlights: ["Cultural sites", "Tea country", "Safaris", "Coastal stays"],
+    rating: 4.9,
+    reviewCount: 156,
+    image: "/images/packages/essence-ceylon.jpg",
+  },
+  {
+    id: "cultural-discovery",
+    title: "Cultural Discovery Tour",
+    slug: "cultural-discovery",
+    duration: "6 Days",
+    startingPrice: 1899,
+    currency: "USD",
+    highlights: ["Ancient cities", "Temples", "Living heritage"],
+    rating: 4.8,
+    reviewCount: 64,
+    image: "/images/packages/tea-trails.jpg",
+  },
+  {
+    id: "coastal-leisure",
+    title: "Coastal & Leisure Escape",
+    slug: "coastal-leisure",
+    duration: "5 Days",
+    startingPrice: 1699,
+    currency: "USD",
+    highlights: ["Oceanfront stays", "Curated local experiences"],
+    rating: 4.9,
+    reviewCount: 73,
+    image: "/images/packages/coastal.jpg",
   },
 ];
 
@@ -200,52 +223,29 @@ export interface Testimonial {
 
 export const testimonials: Testimonial[] = [
   {
-    id: "sarah-london",
-    quote: "Vacation Vibez transformed our Sri Lanka trip into something truly magical. Every sunrise felt curated just for us. The attention to detail was extraordinary—from the boutique hotels to the private guides who felt like old friends.",
-    author: "Sarah Mitchell",
+    id: "laura-uk",
+    quote:
+      "Our Sri Lanka tour was perfectly organized. Every detail reflected local expertise and genuine care.",
+    author: "Laura S.",
     country: "United Kingdom",
     avatar: "/images/testimonials/sarah.jpg",
     featured: true,
   },
   {
-    id: "james-sydney",
-    quote: "The best travel experience we've ever had. Simply perfect.",
-    author: "James Chen",
-    country: "Australia",
-    avatar: "/images/testimonials/james.jpg",
-    videoThumbnail: "/images/testimonials/james-video.jpg",
+    id: "hassan-uae",
+    quote:
+      "From safari to beach, Vacation Vibes created a seamless Sri Lanka travel experience for us.",
+    author: "Hassan A.",
+    country: "UAE",
+    avatar: "/images/testimonials/sarah.jpg",
   },
   {
-    id: "maria-barcelona",
-    quote: "They understood exactly what we wanted before we even knew ourselves.",
-    author: "Maria González",
-    country: "Spain",
-    avatar: "/images/testimonials/maria.jpg",
-    videoThumbnail: "/images/testimonials/maria-video.jpg",
-  },
-  {
-    id: "david-toronto",
-    quote: "Seamless from start to finish. Already planning our next trip.",
-    author: "David Thompson",
-    country: "Canada",
-    avatar: "/images/testimonials/david.jpg",
-    videoThumbnail: "/images/testimonials/david-video.jpg",
-  },
-  {
-    id: "yuki-tokyo",
-    quote: "The personalization was incredible. Every day felt like a new discovery.",
-    author: "Yuki Tanaka",
-    country: "Japan",
-    avatar: "/images/testimonials/yuki.jpg",
-    videoThumbnail: "/images/testimonials/yuki-video.jpg",
-  },
-  {
-    id: "emma-berlin",
-    quote: "I've traveled extensively, but this was something special.",
-    author: "Emma Schmidt",
-    country: "Germany",
-    avatar: "/images/testimonials/emma.jpg",
-    videoThumbnail: "/images/testimonials/emma-video.jpg",
+    id: "priya-india",
+    quote:
+      "The best Sri Lanka inbound tour company we've worked with — professional and deeply knowledgeable.",
+    author: "Priya N.",
+    country: "India",
+    avatar: "/images/testimonials/sarah.jpg",
   },
 ];
 
@@ -302,11 +302,10 @@ export interface Service {
 }
 
 export const services: Service[] = [
-  { id: "itineraries", title: "Custom Itineraries", icon: "map" },
-  { id: "honeymoon", title: "Honeymoon Planning", icon: "heart" },
-  { id: "group", title: "Group Tours", icon: "users" },
-  { id: "corporate", title: "Corporate Travel", icon: "briefcase" },
-  { id: "visa", title: "Visa Support", icon: "document" },
+  { id: "custom-tours", title: "Custom Sri Lanka Tours", icon: "map" },
+  { id: "visa", title: "Visa Assistance", icon: "document" },
+  { id: "transfers", title: "Airport Transfers", icon: "plane" },
+  { id: "hotels", title: "Hotel Bookings", icon: "hotel" },
 ];
 
 export interface FooterColumn {
@@ -316,42 +315,40 @@ export interface FooterColumn {
 
 export const footerColumns: FooterColumn[] = [
   {
-    title: "Sri Lanka",
+    title: "Quick Links",
     links: [
-      { label: "Experiences", href: "/#experiences" },
-      { label: "Packages", href: "/packages" },
+      { label: "Home", href: "/" },
+      { label: "Sri Lanka Tour Packages", href: "/packages" },
       { label: "Build Your Trip", href: "/build-your-trip" },
-      { label: "Blog", href: "/blog" },
+      { label: "Services", href: "/services" },
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
     ],
   },
   {
     title: "Destinations",
     links: [
-      { label: "Bali", href: "/destinations/bali" },
-      { label: "Turkey", href: "/destinations/turkey" },
-      { label: "Switzerland", href: "/destinations/switzerland" },
+      { label: "Sri Lanka", href: "/packages" },
       { label: "Maldives", href: "/destinations/maldives" },
+      { label: "UAE", href: "/destinations/uae" },
     ],
   },
   {
-    title: "Company",
+    title: "Services",
     links: [
-      { label: "About Us", href: "/about" },
-      { label: "Our Story", href: "/about" },
-      { label: "Blog", href: "/blog" },
-      { label: "Services", href: "/services" },
-    ],
-  },
-  {
-    title: "Support",
-    links: [
-      { label: "Contact Us", href: "/contact" },
-      { label: "FAQs", href: "/contact" },
-      { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "/terms" },
+      { label: "Custom Sri Lanka Tours", href: "/build-your-trip" },
+      { label: "Visa Assistance", href: "/services" },
+      { label: "Airport Transfers", href: "/services" },
+      { label: "Hotel Bookings", href: "/services" },
     ],
   },
 ];
+
+export const footerContact = {
+  email: "info@vacationvibez.com",
+  sriLanka: ["+94 70 715 5960", "+94 70 715 5961"],
+  uae: "+971 56 443 8965",
+};
 
 export const socialLinks = [
   { name: "Instagram", href: "#", icon: "instagram" },

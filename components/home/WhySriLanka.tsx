@@ -6,24 +6,25 @@ import { Container } from "@/components/ui/Container";
 import { whyUsPoints } from "@/lib/homeData";
 
 const iconMap: Record<string, JSX.Element> = {
-  map: (
+  wildlife: (
     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
     </svg>
   ),
-  hotel: (
+  train: (
+    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+    </svg>
+  ),
+  temple: (
     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
     </svg>
   ),
-  compass: (
+  beach: (
     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-    </svg>
-  ),
-  calendar: (
-    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
     </svg>
   ),
 };
@@ -135,17 +136,14 @@ export function WhySriLanka() {
               variants={itemVariants}
               className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl lg:text-5xl"
             >
-              Your Sri Lanka Experts
+              Why Visit Sri Lanka
             </motion.h2>
 
             <motion.p
               variants={itemVariants}
               className="mt-6 text-lg leading-relaxed text-charcoal/70"
             >
-              With deep roots in Sri Lanka and a passion for crafting
-              unforgettable journeys, we blend local insight with personalized
-              care. Every trip we design reflects the soul of this remarkable
-              island—and the unique story you want to tell.
+              Sri Lanka is one of Asia&apos;s most diverse travel destinations — offering wildlife safaris, UNESCO heritage sites, tea country landscapes, and tropical beaches within a few hours&apos; drive.
             </motion.p>
 
             <motion.div

@@ -59,7 +59,7 @@ function normalizePackages(db: DbPackage[]): PackageCard[] {
 export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
   const cards: PackageCard[] = dbPackages?.length
     ? normalizePackages(dbPackages)
-    : sriLankaPackages.map((p: { id: string; title: string; slug: string; duration: string; startingPrice: number; highlights: string[]; rating: number; image: string; featured?: boolean }) => ({
+    : sriLankaPackages.map((p) => ({
         id: p.id,
         title: p.title,
         slug: p.slug,
@@ -99,8 +99,8 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
     >
       <Container>
         <SectionHeading
-          title="Sri Lanka Signature Journeys"
-          subtitle="Handpicked itineraries you can personalize in minutes."
+          title="Featured Sri Lanka Tour Packages"
+          subtitle="Handcrafted Sri Lanka inbound tour packages designed around different travel styles and vibes."
           titleClassName="text-4xl sm:text-5xl lg:text-6xl"
           className="mb-16 lg:mb-20"
         />
@@ -120,14 +120,11 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
               transition={{ duration: 0.3 }}
               className="group relative overflow-hidden rounded-3xl bg-white shadow-soft transition-shadow hover:shadow-lift"
             >
-              {/* Featured Badge */}
               {pkg.featured && (
                 <div className="absolute left-4 top-4 z-10 rounded-full bg-gold px-3 py-1 text-xs font-medium text-charcoal">
                   Featured
                 </div>
               )}
-
-              {/* Image */}
               <div className="relative aspect-[4/3] overflow-hidden">
                 <Link href={`/packages/${pkg.slug}`} className="block h-full w-full">
                   <Image
@@ -139,8 +136,6 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
                   />
                 </Link>
               </div>
-
-              {/* Content */}
               <div className="p-6 lg:p-8">
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="font-serif text-xl font-semibold text-charcoal lg:text-2xl">
@@ -150,13 +145,9 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
                     {pkg.duration}
                   </span>
                 </div>
-
-                {/* Rating */}
                 <div className="mt-3">
                   <StarRating rating={pkg.rating} />
                 </div>
-
-                {/* Highlights */}
                 {pkg.highlights.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {pkg.highlights.map((highlight) => (
@@ -169,17 +160,12 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
                     ))}
                   </div>
                 )}
-
-                {/* Price & CTA */}
                 <div className="mt-6 flex items-end justify-between border-t border-charcoal/10 pt-6">
                   <div>
                     <p className="text-xs text-charcoal/50">Starting from</p>
                     <p className="text-2xl font-semibold text-charcoal">
                       ${pkg.price_from.toLocaleString()}
-                      <span className="text-sm font-normal text-charcoal/50">
-                        {" "}
-                        / person
-                      </span>
+                      <span className="text-sm font-normal text-charcoal/50"> / person</span>
                     </p>
                   </div>
                   <div className="flex gap-2">

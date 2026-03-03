@@ -5,6 +5,7 @@ import {
   Packages,
   HowItWorks,
   Testimonials,
+  AboutVacationVibes,
   BeyondSriLanka,
   Services,
   FinalCTA,
@@ -37,6 +38,7 @@ export default async function HomePage() {
       <HomeBuildHighlight />
       <ExperiencesGrid experiences={experiences} />
       <Testimonials />
+      <AboutVacationVibes />
       <BeyondSriLanka destinations={destinations} />
       <Services />
       <FinalCTA />

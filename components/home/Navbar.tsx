@@ -38,13 +38,14 @@ export function Navbar() {
           {/* Logo */}
           <a
             href="/"
-            className={clsx(
-              "font-serif text-xl font-semibold transition-colors duration-300 lg:text-2xl",
-              isScrolled ? "text-teal" : "text-white"
-            )}
+            className="flex items-center transition-opacity hover:opacity-90"
             aria-label="Vacation Vibez Home"
           >
-            Vacation Vibez
+            <img
+              src={isScrolled ? "/images/Asset%202@10x.png" : "/images/Asset%203@10x.png"}
+              alt="Vacation Vibez"
+              className="h-8 w-auto object-contain transition-all duration-300 lg:h-10"
+            />
           </a>
 
           {/* Desktop Navigation */}

@@ -22,34 +22,23 @@ export function FinalCTA() {
             id="final-cta-heading"
             className="font-serif text-3xl font-semibold text-white sm:text-4xl lg:text-5xl"
           >
-            Ready to Discover Sri Lanka{" "}
-            <span className="text-gold">Your Way?</span>
+            Ready to Experience Sri Lanka{" "}
+            <span className="text-gold">in Every Vibe?</span>
           </h2>
 
           <p className="mx-auto mt-6 max-w-xl text-lg text-white/80">
-            Let us craft your perfect journey. Whether you&apos;re seeking adventure,
-            relaxation, or cultural immersion, we&apos;ll design an experience that&apos;s
-            uniquely yours.
+            Start planning your Sri Lanka holiday today with a trusted inbound travel specialist.
           </p>
 
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-10 flex justify-center">
             <Button
               as="a"
-              href="#packages"
+              href="/build-your-trip"
               variant="primary"
               size="lg"
               className="w-full sm:w-auto"
             >
-              Start Planning
-            </Button>
-            <Button
-              as="a"
-              href="#contact"
-              variant="outline"
-              size="lg"
-              className="w-full border-white/30 text-white hover:border-white hover:bg-white/10 sm:w-auto"
-            >
-              Speak to Travel Advisor
+              Plan My Sri Lanka Trip
             </Button>
           </div>
         </motion.div>

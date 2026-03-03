@@ -46,8 +46,8 @@ export function ExperiencesGrid({ experiences: dbExperiences }: { experiences?: 
     >
       <Container>
         <SectionHeading
-          title="Popular Experiences"
-          subtitle="Safari, train rides, tea country, whale watching, wellness and more"
+          title="Signature Sri Lanka Experiences"
+          subtitle="Go beyond sightseeing with immersive Sri Lanka travel experiences."
           className="mb-12 lg:mb-16"
         />
 

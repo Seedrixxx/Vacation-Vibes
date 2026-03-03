@@ -1,22 +1,16 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter, Cormorant } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationJsonLd } from "@/lib/seo/json-ld";
 
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
 
-const inter = Inter({
+const montserrat = Montserrat({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
-});
-
-const cormorant = Cormorant({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-cormorant",
+  variable: "--font-montserrat",
   weight: ["400", "500", "600", "700"],
 });
 
@@ -39,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
+    <html lang="en" className={montserrat.variable}>
       <body className="font-sans">
         <JsonLd data={organizationJsonLd()} />
         {children}
