@@ -3,7 +3,7 @@
 /.pnp
 .pnp.js
 .yarn/install-state.gz
-
+ 
 # testing
 /coverage
 
@@ -32,3 +32,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# large media (use LFS or host elsewhere)
+public/images/Cinematic.mp4
+*.mp4
