@@ -1,8 +1,10 @@
 "use client";
 
+import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
@@ -72,6 +74,43 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
         deposit_amount: p.startingPrice * 0.2,
       }));
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollIndex, setScrollIndex] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    const cardWidth = el.querySelector("[data-carousel-card]")?.getBoundingClientRect().width ?? 0;
+    const gap = 32;
+    const index = cardWidth > 0 ? Math.round(scrollLeft / (cardWidth + gap)) : 0;
+    setScrollIndex(Math.min(index, cards.length - 1));
+  }, [cards.length]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateScrollState();
+    el.addEventListener("scroll", updateScrollState);
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", updateScrollState);
+      ro.disconnect();
+    };
+  }, [updateScrollState]);
+
+  const scrollTo = (index: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const card = el.querySelector(`[data-carousel-card]:nth-child(${index + 1})`) as HTMLElement;
+    card?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -110,76 +149,127 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
+          className="relative"
         >
-          {cards.map((pkg) => (
-            <motion.article
-              key={pkg.id}
-              variants={itemVariants}
-              whileHover={{ y: -8 }}
-              transition={{ duration: 0.3 }}
-              className="group relative overflow-hidden rounded-3xl bg-white shadow-soft transition-shadow hover:shadow-lift"
-            >
-              {pkg.featured && (
-                <div className="absolute left-4 top-4 z-10 rounded-full bg-gold px-3 py-1 text-xs font-medium text-charcoal">
-                  Featured
-                </div>
-              )}
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <Link href={`/packages/${pkg.slug}`} className="block h-full w-full">
-                  <Image
-                    src={pkg.image}
-                    alt={pkg.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                  />
-                </Link>
-              </div>
-              <div className="p-6 lg:p-8">
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="font-serif text-xl font-semibold text-charcoal lg:text-2xl">
-                    {pkg.title}
-                  </h3>
-                  <span className="flex-shrink-0 rounded-full bg-teal/10 px-3 py-1 text-sm font-medium text-teal">
-                    {pkg.duration}
-                  </span>
-                </div>
-                <div className="mt-3">
-                  <StarRating rating={pkg.rating} />
-                </div>
-                {pkg.highlights.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {pkg.highlights.map((highlight) => (
-                      <span
-                        key={highlight}
-                        className="rounded-full bg-sand px-3 py-1 text-xs text-charcoal/70"
-                      >
-                        {highlight}
-                      </span>
-                    ))}
+          <div
+            ref={scrollRef}
+            className="flex gap-8 overflow-x-auto overflow-y-hidden pb-4 scroll-smooth scrollbar-hide md:pb-0"
+            style={{
+              scrollSnapType: "x mandatory",
+              WebkitOverflowScrolling: "touch",
+            }}
+            role="region"
+            aria-label="Tour packages carousel"
+          >
+            {cards.map((pkg) => (
+              <motion.article
+                key={pkg.id}
+                data-carousel-card
+                variants={itemVariants}
+                whileHover={{ y: -8 }}
+                transition={{ duration: 0.3 }}
+                className="group relative min-w-[min(100%,320px)] max-w-[380px] flex-shrink-0 overflow-hidden rounded-3xl bg-white shadow-soft transition-shadow hover:shadow-lift sm:min-w-[340px] lg:min-w-[360px]"
+                style={{ scrollSnapAlign: "start" }}
+              >
+                {pkg.featured && (
+                  <div className="absolute left-4 top-4 z-10 rounded-full bg-gold px-3 py-1 text-xs font-medium text-charcoal">
+                    Featured
                   </div>
                 )}
-                <div className="mt-6 flex items-end justify-between border-t border-charcoal/10 pt-6">
-                  <div>
-                    <p className="text-xs text-charcoal/50">Starting from</p>
-                    <p className="text-2xl font-semibold text-charcoal">
-                      ${pkg.price_from.toLocaleString()}
-                      <span className="text-sm font-normal text-charcoal/50"> / person</span>
-                    </p>
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <Link href={`/packages/${pkg.slug}`} className="block h-full w-full">
+                    <Image
+                      src={pkg.image}
+                      alt={pkg.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  </Link>
+                </div>
+                <div className="p-6 lg:p-8">
+                  <div className="flex items-start justify-between gap-4">
+                    <h3 className="font-serif text-xl font-semibold text-charcoal lg:text-2xl">
+                      {pkg.title}
+                    </h3>
+                    <span className="flex-shrink-0 rounded-full bg-teal/10 px-3 py-1 text-sm font-medium text-teal">
+                      {pkg.duration}
+                    </span>
                   </div>
-                  <div className="flex gap-2">
-                    <Button as="a" href={`/packages/${pkg.slug}`} size="sm" variant="outline">
-                      View
-                    </Button>
-                    <Button as="a" href={`/build-your-trip?package=${pkg.slug}`} size="sm">
-                      Customize
-                    </Button>
+                  <div className="mt-3">
+                    <StarRating rating={pkg.rating} />
+                  </div>
+                  {pkg.highlights.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {pkg.highlights.map((highlight) => (
+                        <span
+                          key={highlight}
+                          className="rounded-full bg-sand px-3 py-1 text-xs text-charcoal/70"
+                        >
+                          {highlight}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-6 flex items-end justify-between border-t border-charcoal/10 pt-6">
+                    <div>
+                      <p className="text-xs text-charcoal/50">Starting from</p>
+                      <p className="text-2xl font-semibold text-charcoal">
+                        ${pkg.price_from.toLocaleString()}
+                        <span className="text-sm font-normal text-charcoal/50"> / person</span>
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button as="a" href={`/packages/${pkg.slug}`} size="sm" variant="outline">
+                        View
+                      </Button>
+                      <Button as="a" href={`/build-your-trip?package=${pkg.slug}`} size="sm">
+                        Customize
+                      </Button>
+                    </div>
                   </div>
                 </div>
+              </motion.article>
+            ))}
+          </div>
+
+          {/* Carousel navigation */}
+          {cards.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => scrollTo(Math.max(0, scrollIndex - 1))}
+                disabled={!canScrollLeft}
+                className="absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-lg transition hover:bg-white disabled:pointer-events-none disabled:opacity-40 md:left-4 md:block lg:-left-4"
+                aria-label="Previous packages"
+              >
+                <ChevronLeft className="h-6 w-6 text-charcoal" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollTo(Math.min(cards.length - 1, scrollIndex + 1))}
+                disabled={!canScrollRight}
+                className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-lg transition hover:bg-white disabled:pointer-events-none disabled:opacity-40 md:right-4 md:block lg:-right-4"
+                aria-label="Next packages"
+              >
+                <ChevronRight className="h-6 w-6 text-charcoal" />
+              </button>
+              <div className="mt-8 flex justify-center gap-2 md:mt-10">
+                {cards.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => scrollTo(i)}
+                    className={`h-2 rounded-full transition-all ${
+                      i === scrollIndex ? "w-8 bg-teal" : "w-2 bg-charcoal/25 hover:bg-charcoal/40"
+                    }`}
+                    aria-label={`Go to package ${i + 1}`}
+                    aria-current={i === scrollIndex ? "true" : undefined}
+                  />
+                ))}
               </div>
-            </motion.article>
-          ))}
+            </>
+          )}
         </motion.div>
 
         {/* Trust Microcopy */}

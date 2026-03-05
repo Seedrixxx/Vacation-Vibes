@@ -2,15 +2,25 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendDepositConfirmation } from "@/lib/email";
+import { prisma } from "@/lib/prisma";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-11-20.acacia" });
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+function getStripe(): Stripe | null {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) return null;
+  return new Stripe(key, { apiVersion: "2025-02-24.acacia" });
+}
 
 export async function POST(request: Request) {
+  const stripe = getStripe();
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!stripe || !webhookSecret) {
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+  }
+
   const body = await request.text();
   const sig = request.headers.get("stripe-signature");
-  if (!sig || !webhookSecret) {
-    return NextResponse.json({ error: "Missing signature or secret" }, { status: 400 });
+  if (!sig) {
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -22,30 +32,72 @@ export async function POST(request: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const amount = (session.amount_total ?? 0) / 100;
-    const currency = session.currency ?? "usd";
+    const amountTotal = session.amount_total ?? 0;
+    const amount = amountTotal / 100;
+    const currency = (session.currency ?? "usd").toUpperCase();
     const customerEmail = session.customer_email ?? session.customer_details?.email ?? null;
 
-    const supabase = createAdminClient();
-    await supabase.from("deposits").insert({
-      amount,
-      currency,
-      status: "paid",
-      stripe_session_id: session.id,
-      customer_email: customerEmail,
-      package_id: session.metadata?.package_id || null,
-    });
-
-    if (customerEmail) {
+    const tripOrderId = session.metadata?.tripOrderId;
+    if (tripOrderId) {
       try {
-        await sendDepositConfirmation({
-          to: customerEmail,
-          amount,
-          currency,
-          customerEmail,
+        await prisma.$transaction(async (tx) => {
+          await tx.paymentReceipt.create({
+            data: {
+              tripOrderId,
+              provider: "STRIPE",
+              stripeSessionId: session.id,
+              stripePaymentIntentId: session.payment_intent as string ?? null,
+              amountPaid: amountTotal,
+              currency,
+              receiptUrl: null,
+              rawJson: session as unknown as object,
+            },
+          });
+          await tx.tripOrder.update({
+            where: { id: tripOrderId },
+            data: {
+              paymentStatus: "PAID",
+              tripStatus: "PAID",
+            },
+          });
         });
-      } catch {
-        // Don't fail webhook if email fails
+        if (customerEmail) {
+          try {
+            await sendDepositConfirmation({
+              to: customerEmail,
+              amount,
+              currency,
+              customerEmail,
+            });
+          } catch {
+            // Don't fail webhook if email fails
+          }
+        }
+      } catch (err) {
+        console.error("TripOrder webhook error:", err);
+        return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+      }
+    } else {
+      const supabase = createAdminClient();
+      await supabase.from("deposits").insert({
+        amount,
+        currency,
+        status: "paid",
+        stripe_session_id: session.id,
+        customer_email: customerEmail,
+        package_id: session.metadata?.package_id || null,
+      });
+      if (customerEmail) {
+        try {
+          await sendDepositConfirmation({
+            to: customerEmail,
+            amount,
+            currency,
+            customerEmail,
+          });
+        } catch {
+          // Don't fail webhook if email fails
+        }
       }
     }
   }

@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import type { Experience } from "@/lib/supabase/types";
 
 const TRAVEL_TYPES = [
@@ -25,7 +29,7 @@ const BUDGET_TIERS = [
   { value: "luxury", label: "Luxury" },
 ];
 
-const STORAGE_KEY = "vacation_vibes_blueprint";
+const TRIP_ORDER_STORAGE_PREFIX = "vacation_vibes_trip_order_";
 
 export function TripDesignerWizard({ experiences = [] }: { experiences?: Experience[] }) {
   const router = useRouter();
@@ -35,9 +39,13 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
   const [duration, setDuration] = useState<number>(Number(searchParams.get("duration")) || 7);
   const [interestSlugs, setInterestSlugs] = useState<string[]>([]);
   const [budgetTier, setBudgetTier] = useState(searchParams.get("budget") ?? "mid");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const toggleInterest = (slug: string) => {
     setInterestSlugs((prev) =>
@@ -45,43 +53,55 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
     );
   };
 
-  const handleSubmit = async () => {
+  const handleSubmitContact = async () => {
     setSubmitting(true);
-    const payload = {
+    const inputsJson = {
       travel_type: travelType,
       duration_days: duration,
+      durationNights: duration - 1,
+      durationDays: duration,
       interest_slugs: interestSlugs,
       budget_tier: budgetTier,
-      package_slug: searchParams.get("package") ?? null,
+      country: "Sri Lanka",
+      tripType: "INBOUND",
     };
     try {
-      const res = await fetch("/api/trip-designer/blueprint", {
+      const res = await fetch("/api/trip-orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          source: "BUILD_TRIP",
+          customerFullName: fullName.trim(),
+          customerEmail: email.trim(),
+          customerWhatsapp: whatsapp.trim() || null,
+          tripType: "INBOUND",
+          country: "Sri Lanka",
+          durationNights: duration - 1,
+          durationDays: duration,
+          inputsJson,
+          handoffMode: "AGENT",
+        }),
       });
       const data = await res.json();
-      const blueprintId = data.blueprint_id ?? data.blueprintId;
-      if (blueprintId) {
-        try {
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        } catch {
-          // ignore storage errors
-        }
-        router.push(`/build-your-trip/result?blueprint_id=${encodeURIComponent(blueprintId)}`);
-        return;
+      if (!res.ok) throw new Error(data.error ?? "Failed to create trip order");
+      toast.success("Trip request created!");
+      try {
+        sessionStorage.setItem(
+          TRIP_ORDER_STORAGE_PREFIX + data.invoiceNumber,
+          JSON.stringify({
+            invoiceNumber: data.invoiceNumber,
+            tripOrderId: data.tripOrderId,
+            itineraryJson: data.itineraryJson ?? {},
+            pricingJson: data.pricingJson ?? {},
+            handoffMode: data.handoffMode ?? "AGENT",
+          })
+        );
+      } catch {
+        // ignore
       }
-      router.push(
-        `/build-your-trip/result?${new URLSearchParams(
-          Object.fromEntries(Object.entries(payload).map(([k, v]) => [k, String(v)]))
-        ).toString()}`
-      );
-    } catch {
-      router.push(
-        `/build-your-trip/result?${new URLSearchParams(
-          Object.fromEntries(Object.entries(payload).map(([k, v]) => [k, String(v)]))
-        ).toString()}`
-      );
+      router.push(`/build-your-trip/result?invoice=${encodeURIComponent(data.invoiceNumber)}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to submit");
     } finally {
       setSubmitting(false);
     }
@@ -208,8 +228,70 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
             <Button variant="outline" onClick={() => setStep(3)}>
               Back
             </Button>
-            <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Creating…" : "Get my Trip Blueprint"}
+            <Button onClick={() => setStep(5)}>Next</Button>
+          </div>
+        </div>
+      )}
+
+      {step === 5 && (
+        <div className="mt-8 space-y-4">
+          <h2 className="font-medium text-charcoal">Contact & Submit</h2>
+          <p className="text-sm text-charcoal/70">
+            Share your details so we can send your Trip Blueprint and follow up.
+          </p>
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Full name *</Label>
+            <Input
+              id="fullName"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              placeholder="Jane Doe"
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="jane@example.com"
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp">WhatsApp (optional)</Label>
+            <Input
+              id="whatsapp"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              placeholder="+1 234 567 8900"
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="message">Message (optional)</Label>
+            <Textarea
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Any special requests or dates?"
+              rows={3}
+              className="w-full"
+            />
+          </div>
+          <div className="mt-8 flex justify-between">
+            <Button variant="outline" onClick={() => setStep(4)}>
+              Back
+            </Button>
+            <Button
+              onClick={handleSubmitContact}
+              disabled={submitting || !fullName.trim() || !email.trim()}
+            >
+              {submitting ? "Submitting…" : "Get my Trip Blueprint"}
             </Button>
           </div>
         </div>

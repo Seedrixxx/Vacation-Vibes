@@ -9,8 +9,8 @@ Production-ready Phase 1: public website, admin CMS, Trip Designer, deposit paym
 - **Styling**: Tailwind CSS, tailwindcss-animate
 - **UI**: Radix primitives (accordion, etc.), custom components
 - **Motion**: Framer Motion, GSAP + ScrollTrigger (client-only)
-- **Database & CMS**: Supabase (Postgres + Storage)
-- **Auth**: Supabase Auth (admin)
+- **Database & CMS**: Supabase (legacy), Prisma + PostgreSQL (Trip Commerce: packages, trip orders, itinerary templates)
+- **Auth**: NextAuth (admin), Supabase Auth (legacy)
 - **Payments**: Stripe Checkout (deposit only) + webhooks
 - **Email**: Resend (or swap with nodemailer)
 - **Validation**: Zod
@@ -32,8 +32,10 @@ npm install
 
 Copy `.env.example` to `.env.local` and fill in:
 
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- `DATABASE_URL` (PostgreSQL for Prisma), `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (admin login)
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (legacy)
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (admin image uploads)
 - `NEXT_PUBLIC_GA4_ID` (optional)
 - `RESEND_API_KEY` (optional; inquiry + deposit emails), `RESEND_FROM_EMAIL`, `ADMIN_EMAIL`
 - `DEFAULT_DEPOSIT_AMOUNT` (e.g. 500)
@@ -67,11 +69,23 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-### 6. Admin
+### 6. Prisma (Trip Commerce)
+
+```bash
+npx prisma migrate dev --name trip_commerce
+npx prisma generate
+```
+
+Creates Package, TripOrder, ItineraryTemplate, TripBuilderOption, PaymentReceipt, InvoiceSequence, etc. Ensure `DATABASE_URL` is set in `.env`.
+
+### 7. Admin
 
 - Go to [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
-- Sign in with the Supabase user you created (admin email/password)
-- Dashboard: destinations (CRUD), experiences (list), packages (CRUD + itinerary days), blog (CRUD + markdown), inquiries, payments. Image upload via `POST /api/upload` (Supabase Storage bucket `assets`).
+- Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` (NextAuth credentials).
+- **Dashboard**: Tours, Destinations, Testimonials, Trip Requests (Prisma).
+- **Packages** (Prisma): CRUD for prebuilt packages (days, list items, pricing options). Images via Cloudinary (`POST /api/upload/cloudinary`).
+- **Trip Builder**: Options (wizard choices) and Itinerary Templates. Use "Seed Sri Lanka templates" for default templates.
+- **Trip Orders**: List and detail; filter by status; update trip status (PENDING → PAID → PROCESSING → APPROVED).
 
 **Dev seed**: After running the seed, you can log in with any user created in Supabase Auth. There is no separate “admin role” in seed; protect admin by only creating one Supabase user for yourself.
 
@@ -146,8 +160,18 @@ Build is portable (not Vercel-only). Use any Node host (e.g. Vercel, Railway, Re
 - **Breadcrumb + Tour**: Package detail page.
 - **Breadcrumb + Article**: Blog post page.
 
+## Trip Commerce + CMS
+
+- **Visit Sri Lanka** (`/visit-sri-lanka`): INBOUND packages from Prisma. **Tour Packages** (`/tour-packages`): OUTBOUND packages.
+- **Package detail** (`/packages/[slug]`): Prisma Package with itinerary, pricing, Pay deposit/full (→ `/checkout`) or Request quote.
+- **Build Your Trip** (`/build-your-trip`): Wizard submits to `POST /api/trip-orders` (source BUILD_TRIP). Result page shows invoice, itinerary, pricing, and Pay/WhatsApp CTAs.
+- **Checkout** (`/checkout`): With `packageId` + `pricingOptionId` → form → create TripOrder → redirect to payment. With `invoiceNumber` → Pay deposit/full via `POST /api/checkout` → Stripe. Webhook updates TripOrder (PaymentReceipt, paymentStatus PAID, tripStatus PAID) and sends receipt email.
+- **Track your trip** (`/track`): Enter invoice + email; `GET /api/track` returns status, itinerary summary, receipt link if paid.
+- **Invoice numbers**: Format `VV-YYYYMM-######` via `InvoiceSequence` and `lib/trip-builder/invoice.ts`.
+- **WhatsApp**: `lib/whatsapp.ts` — `getWhatsAppLink(phone?, text?)`, `getTripHandoffMessage(...)` for agent handoff.
+
 ## Phase 2 (future)
 
 - AI-powered summary in Trip Designer
-- Full booking engine
+- Wire trip-created and status-update emails into order creation and admin actions
 - More admin CRUD (experiences with upload)

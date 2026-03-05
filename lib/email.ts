@@ -51,3 +51,83 @@ export async function sendDepositConfirmation(params: {
     }),
   });
 }
+
+/** Trip created (quote/agent handoff) — to customer and admin */
+export async function sendTripCreatedQuote(params: {
+  to: string;
+  customerName: string;
+  invoiceNumber: string;
+  whatsAppLink: string;
+}) {
+  if (!resend) return;
+  const html = `<p>Hi ${params.customerName},</p><p>We received your trip request. Your invoice number is <strong>${params.invoiceNumber}</strong>.</p><p><a href="${params.whatsAppLink}">Chat with us on WhatsApp</a> to refine your itinerary and get a quote.</p><p>— Vacation Vibes</p>`;
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: params.to,
+    subject: `Trip request received — ${params.invoiceNumber}`,
+    html,
+  });
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: ADMIN_EMAIL,
+    subject: `New trip request ${params.invoiceNumber} — ${params.customerName}`,
+    html: `<p>New quote request: ${params.invoiceNumber}. Customer: ${params.customerName}. <a href="${params.whatsAppLink}">WhatsApp</a>.</p>`,
+  });
+}
+
+/** Trip created (priced, pay now) — to customer with pay link */
+export async function sendTripCreatedPriced(params: {
+  to: string;
+  customerName: string;
+  invoiceNumber: string;
+  totalFormatted: string;
+  payUrl: string;
+}) {
+  if (!resend) return;
+  const html = `<p>Hi ${params.customerName},</p><p>Your trip is ready. Invoice: <strong>${params.invoiceNumber}</strong>. Total: ${params.totalFormatted}.</p><p><a href="${params.payUrl}">Pay now</a></p><p>— Vacation Vibes</p>`;
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: params.to,
+    subject: `Your trip summary — ${params.invoiceNumber}`,
+    html,
+  });
+}
+
+/** Payment receipt + itinerary — to customer after Stripe payment */
+export async function sendPaymentReceipt(params: {
+  to: string;
+  customerName: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  receiptUrl?: string | null;
+}) {
+  if (!resend) return;
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: params.to,
+    subject: "Payment received — Vacation Vibes",
+    html: getDepositConfirmationHtml({
+      amount: params.amount,
+      currency: params.currency,
+      customerEmail: params.to,
+    }) + (params.receiptUrl ? `<p><a href="${params.receiptUrl}">View receipt</a></p>` : ""),
+  });
+}
+
+/** Status update (Processing/Approved) — to customer */
+export async function sendTripStatusUpdate(params: {
+  to: string;
+  customerName: string;
+  invoiceNumber: string;
+  tripStatus: string;
+}) {
+  if (!resend) return;
+  const html = `<p>Hi ${params.customerName},</p><p>Your trip ${params.invoiceNumber} status is now <strong>${params.tripStatus}</strong>.</p><p>— Vacation Vibes</p>`;
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: params.to,
+    subject: `Trip update — ${params.invoiceNumber}`,
+    html,
+  });
+}

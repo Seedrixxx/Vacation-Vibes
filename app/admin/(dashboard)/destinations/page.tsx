@@ -1,47 +1,66 @@
 import Link from "next/link";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { prisma } from "@/lib/prisma";
+import { Button } from "@/components/ui/Button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Plus } from "lucide-react";
+import { DestinationsTableActions } from "./DestinationsTableActions";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminDestinationsPage() {
-  const supabase = createAdminClient();
-  const { data: list } = await supabase.from("destinations").select("*").order("name");
-  const destinations = (list ?? []) as { id: string; name: string; slug: string; country: string; focus_inbound: boolean }[];
+  const destinations = await prisma.destination.findMany({
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-serif text-2xl font-semibold text-charcoal">Destinations</h1>
-        <Link
-          href="/admin/destinations/new"
-          className="rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white"
-        >
-          Add destination
+        <h1 className="font-serif text-2xl font-semibold text-charcoal">
+          Destinations
+        </h1>
+        <Link href="/admin/destinations/new">
+          <Button variant="secondary" size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            New Destination
+          </Button>
         </Link>
       </div>
-      <div className="mt-6 overflow-hidden rounded-xl bg-white shadow-soft">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-charcoal/10">
-              <th className="p-4 font-medium">Name</th>
-              <th className="p-4 font-medium">Slug</th>
-              <th className="p-4 font-medium">Country</th>
-              <th className="p-4 font-medium">Focus inbound</th>
-            </tr>
-          </thead>
-          <tbody>
-            {destinations.map((d: { id: string; name: string; slug: string; country: string; focus_inbound: boolean }) => (
-              <tr key={d.id} className="border-b border-charcoal/5">
-                <td className="p-4">
-                  <Link href={`/admin/destinations/${d.id}`} className="text-teal hover:underline">
-                    {d.name}
-                  </Link>
-                </td>
-                <td className="p-4 text-charcoal/70">{d.slug}</td>
-                <td className="p-4">{d.country}</td>
-                <td className="p-4">{d.focus_inbound ? "Yes" : "No"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="rounded-lg border border-charcoal/10 bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Slug</TableHead>
+              <TableHead className="w-[100px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {destinations.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center text-charcoal/60">
+                  No destinations yet.
+                </TableCell>
+              </TableRow>
+            ) : (
+              destinations.map((d) => (
+                <TableRow key={d.id}>
+                  <TableCell className="font-medium">{d.name}</TableCell>
+                  <TableCell className="text-charcoal/70">{d.slug}</TableCell>
+                  <TableCell>
+                    <DestinationsTableActions destinationId={d.id} />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
