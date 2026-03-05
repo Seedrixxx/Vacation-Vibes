@@ -72,10 +72,23 @@ export default async function DestinationPage({ params }: PageProps) {
       <section className="bg-sand py-20 lg:py-32">
         <Container className="text-center">
           <div className="mx-auto max-w-2xl">
-            <h2 className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">Coming Soon</h2>
+            <h2 className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">Explore {name}</h2>
             <p className="mt-4 text-lg text-charcoal/60">
-              We&apos;re crafting extraordinary experiences for {name}. Sign up to be the first to know.
+              {tagline
+                ? tagline
+                : `Discover curated experiences and handcrafted itineraries for ${name}. View our packages or tell us your preferences for a custom trip.`}
             </p>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+              <Button as="a" href={`/packages?destination=${encodeURIComponent(slug)}`}>
+                View packages
+              </Button>
+              <Button as="a" href={slug ? `/build-your-trip?destination=${encodeURIComponent(slug)}` : "/build-your-trip"} variant="outline">
+                Build your trip
+              </Button>
+              <Button as="a" href="/contact" variant="outline">
+                Contact us
+              </Button>
+            </div>
             <div className="mt-12">
               <Link href="/" className="inline-flex items-center gap-2 text-teal hover:text-gold">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

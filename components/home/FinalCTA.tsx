@@ -1,10 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { viewportDefaults } from "@/lib/motion";
 
 export function FinalCTA() {
+  const reduceMotion = useReducedMotion();
   return (
     <section
       className="gradient-cta py-20 lg:py-32"
@@ -12,9 +14,9 @@ export function FinalCTA() {
     >
       <Container>
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+          whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+          viewport={viewportDefaults}
           transition={{ duration: 0.8 }}
           className="mx-auto max-w-3xl text-center"
         >

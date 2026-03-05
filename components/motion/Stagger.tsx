@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { viewportTight } from "@/lib/motion";
 
 interface StaggerProps {
   children: ReactNode;
@@ -23,7 +24,7 @@ export function Stagger({
       className={className}
       initial="hidden"
       whileInView={reduceMotion ? "visible" : "visible"}
-      viewport={{ once, margin: "-40px" }}
+      viewport={{ ...viewportTight, once }}
       variants={{
         hidden: {},
         visible: {

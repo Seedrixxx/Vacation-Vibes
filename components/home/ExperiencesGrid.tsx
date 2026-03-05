@@ -1,11 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
 import { sriLankaExperiences } from "@/lib/homeData";
+import { viewportDefaults } from "@/lib/motion";
 import type { Experience as DbExperience } from "@/lib/supabase/types";
 
 type ExperienceItem = { id: string; title: string; description: string; image: string; slug: string };
@@ -25,11 +26,12 @@ export function ExperiencesGrid({ experiences: dbExperiences }: { experiences?: 
     ? normalizeExperiences(dbExperiences)
     : sriLankaExperiences.map((e) => ({ id: e.id, title: e.title, description: e.description, image: e.image, slug: e.id }));
 
+  const reduceMotion = useReducedMotion();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.1 },
+      transition: { staggerChildren: reduceMotion ? 0 : 0.1 },
     },
   };
 
@@ -55,7 +57,7 @@ export function ExperiencesGrid({ experiences: dbExperiences }: { experiences?: 
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
+          viewport={viewportDefaults}
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
         >
           {items.map((experience) => (

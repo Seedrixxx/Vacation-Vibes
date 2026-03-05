@@ -1,9 +1,10 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { useRef } from "react";
 import { Container } from "@/components/ui/Container";
 import { whyUsPoints } from "@/lib/homeData";
+import { viewportDefaults } from "@/lib/motion";
 
 const iconMap: Record<string, JSX.Element> = {
   wildlife: (
@@ -31,19 +32,20 @@ const iconMap: Record<string, JSX.Element> = {
 
 export function WhySriLanka() {
   const sectionRef = useRef<HTMLElement>(null);
+  const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "end start"],
   });
 
-  const imageY = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const imageY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [50, -50]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: reduceMotion ? 0 : 0.1,
       },
     },
   };
@@ -73,9 +75,9 @@ export function WhySriLanka() {
           >
             <div className="grid grid-cols-2 gap-4">
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
+                whileInView={reduceMotion ? false : { opacity: 1, scale: 1 }}
+                viewport={viewportDefaults}
                 transition={{ duration: 0.6 }}
                 className="space-y-4"
               >
@@ -97,9 +99,9 @@ export function WhySriLanka() {
                 </div>
               </motion.div>
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
+                whileInView={reduceMotion ? false : { opacity: 1, scale: 1 }}
+                viewport={viewportDefaults}
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="mt-8 space-y-4"
               >
@@ -128,7 +130,7 @@ export function WhySriLanka() {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={viewportDefaults}
             className="order-1 lg:order-2"
           >
             <motion.h2

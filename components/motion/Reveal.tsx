@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { viewportTight } from "@/lib/motion";
 
 interface RevealProps {
   children: ReactNode;
@@ -30,7 +31,7 @@ export function Reveal({
       className={className}
       initial={reduceMotion ? undefined : { opacity: 0, [a]: o }}
       whileInView={reduceMotion ? undefined : { opacity: 1, [a]: 0 }}
-      viewport={{ once, margin: "-40px" }}
+      viewport={{ ...viewportTight, once }}
       transition={{ duration: 0.6, delay, ease: [0.25, 0.1, 0.25, 1] }}
     >
       {children}

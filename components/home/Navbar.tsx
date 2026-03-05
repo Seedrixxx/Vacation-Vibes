@@ -1,24 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import clsx from "clsx";
-import { mainNav, getWhatsAppLink } from "@/lib/config/nav";
+import { mainNav, getWhatsAppLink, adminLoginHref } from "@/lib/config/nav";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+
+const SCROLL_THRESHOLD = 20;
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const { scrollY } = useScroll();
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > SCROLL_THRESHOLD);
+  });
 
   return (
     <header
@@ -66,7 +64,7 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Desktop CTA + WhatsApp */}
+          {/* Desktop: WhatsApp, CTA, Login */}
           <div className="hidden items-center gap-2 lg:flex">
             <a
               href={getWhatsAppLink()}
@@ -91,6 +89,18 @@ export function Navbar() {
             >
               Build Your Trip
             </Button>
+            <a
+              href={adminLoginHref}
+              className={clsx(
+                "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+                isScrolled ? "bg-charcoal/10 text-charcoal" : "bg-white/20 text-white"
+              )}
+              aria-label="Admin login"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -160,6 +170,7 @@ export function Navbar() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-lg bg-[#25D366] px-4 py-3 text-center font-medium text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     WhatsApp
                   </a>
@@ -172,6 +183,13 @@ export function Navbar() {
                   >
                     Build Your Trip
                   </Button>
+                  <a
+                    href={adminLoginHref}
+                    className="rounded-lg border border-charcoal/20 px-4 py-3 text-center text-sm font-medium text-charcoal/80"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Admin login
+                  </a>
                 </div>
               </div>
             </Container>

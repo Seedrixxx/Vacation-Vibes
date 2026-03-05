@@ -1,7 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import clsx from "clsx";
+import { viewportDefaults } from "@/lib/motion";
 
 interface SectionHeadingProps {
   title: string;
@@ -20,6 +21,7 @@ export function SectionHeading({
   titleClassName,
   subtitleClassName,
 }: SectionHeadingProps) {
+  const reduceMotion = useReducedMotion();
   const alignmentClasses = {
     left: "text-left",
     center: "text-center",
@@ -28,9 +30,9 @@ export function SectionHeading({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
+      initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+      whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+      viewport={viewportDefaults}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={clsx(alignmentClasses[align], className)}
     >

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, useCallback, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { viewportDefaults } from "@/lib/motion";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -111,12 +112,13 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
     card?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
   };
 
+  const reduceMotion = useReducedMotion();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: reduceMotion ? 0 : 0.1,
       },
     },
   };
@@ -148,7 +150,7 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
+          viewport={viewportDefaults}
           className="relative"
         >
           <div
@@ -274,9 +276,9 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
 
         {/* Trust Microcopy */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+          whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+          viewport={viewportDefaults}
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-center"
         >

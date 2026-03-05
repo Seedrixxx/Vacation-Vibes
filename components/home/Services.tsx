@@ -1,9 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { services } from "@/lib/homeData";
+import { viewportDefaults } from "@/lib/motion";
 
 const iconMap: Record<string, JSX.Element> = {
   map: (
@@ -44,12 +45,13 @@ const iconMap: Record<string, JSX.Element> = {
 };
 
 export function Services() {
+  const reduceMotion = useReducedMotion();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: reduceMotion ? 0 : 0.1,
       },
     },
   };
@@ -80,7 +82,7 @@ export function Services() {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
+          viewport={viewportDefaults}
           className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5"
         >
           {services.map((service) => (
