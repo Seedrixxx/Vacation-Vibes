@@ -4,6 +4,8 @@ import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationJsonLd } from "@/lib/seo/json-ld";
+import { SessionProvider } from "@/components/providers/SessionProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
 
@@ -35,8 +37,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={montserrat.variable}>
       <body className="font-sans">
-        <JsonLd data={organizationJsonLd()} />
-        {children}
+        <SessionProvider>
+          <JsonLd data={organizationJsonLd()} />
+          {children}
+          <Toaster richColors position="top-right" />
+        </SessionProvider>
       </body>
       {GA4_ID && (
         <>

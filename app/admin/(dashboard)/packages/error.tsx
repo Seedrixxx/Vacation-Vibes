@@ -1,0 +1,26 @@
+"use client";
+
+import { useEffect } from "react";
+import { Button } from "@/components/ui/Button";
+
+export default function PackagesError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  return (
+    <div className="rounded-lg border border-red-200 bg-red-50 p-6">
+      <h2 className="font-semibold text-red-800">Something went wrong</h2>
+      <p className="mt-2 text-sm text-red-700">{error.message}</p>
+      <Button onClick={reset} variant="outline" className="mt-4">
+        Try again
+      </Button>
+    </div>
+  );
+}

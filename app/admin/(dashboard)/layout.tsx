@@ -1,34 +1,26 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { AdminSidebarWrapper } from "@/components/admin/AdminSidebarWrapper";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/admin/login");
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as { role?: string }).role !== "admin") {
+    redirect("/admin/login");
+  }
 
   return (
-    <div className="min-h-screen bg-sand">
-      <header className="border-b border-charcoal/10 bg-white">
-        <div className="flex h-14 items-center justify-between px-6">
-          <Link href="/admin" className="font-serif text-xl font-semibold text-teal">
-            Vacation Vibez Admin
-          </Link>
-          <nav className="flex gap-4">
-            <Link href="/admin/destinations" className="text-sm text-charcoal/70 hover:text-charcoal">Destinations</Link>
-            <Link href="/admin/experiences" className="text-sm text-charcoal/70 hover:text-charcoal">Experiences</Link>
-            <Link href="/admin/packages" className="text-sm text-charcoal/70 hover:text-charcoal">Packages</Link>
-            <Link href="/admin/blog" className="text-sm text-charcoal/70 hover:text-charcoal">Blog</Link>
-            <Link href="/admin/inquiries" className="text-sm text-charcoal/70 hover:text-charcoal">Inquiries</Link>
-            <Link href="/admin/payments" className="text-sm text-charcoal/70 hover:text-charcoal">Payments</Link>
-          </nav>
-        </div>
-      </header>
-      <main className="p-6">{children}</main>
+    <div className="min-h-screen bg-sand-200 lg:flex">
+      <AdminSidebarWrapper />
+      <main className="flex-1 p-4 pt-16 lg:pt-6 lg:pl-6">
+        {children}
+      </main>
     </div>
   );
 }

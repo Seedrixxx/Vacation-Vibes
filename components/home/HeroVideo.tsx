@@ -89,7 +89,7 @@ export function HeroVideo() {
         className="relative flex w-full items-center justify-center overflow-hidden bg-charcoal"
         style={{ aspectRatio: "16/9" }}
       >
-        {/* Video */}
+        {/* Video or fallback */}
         {!videoError ? (
           <video
             ref={videoRef}
@@ -111,6 +111,11 @@ export function HeroVideo() {
             aria-hidden="true"
           />
         )}
+        {/* Dark overlay so text stays readable when video is playing */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/25 to-black/50 pointer-events-none z-[1]"
+        />
 
         {/* Mute / Unmute */}
         <button
@@ -140,15 +145,15 @@ export function HeroVideo() {
           >
             <motion.h1
               variants={itemVariants}
-              className="font-serif text-4xl font-semibold leading-tight tracking-tight text-white drop-shadow-hero sm:text-5xl lg:text-6xl xl:text-7xl"
+              className="font-serif text-4xl font-semibold leading-tight tracking-tight text-white drop-shadow-heroText sm:text-5xl lg:text-6xl xl:text-7xl"
             >
               Sri Lanka{" "}
-              <span className="text-gold drop-shadow-hero">In Every Vibe.</span>
+              <span className="text-gold drop-shadow-heroText">In Every Vibe.</span>
             </motion.h1>
 
             <motion.p
               variants={itemVariants}
-              className="mx-auto mt-6 max-w-xl text-base text-white/90 drop-shadow-sm sm:text-lg lg:text-xl"
+              className="mx-auto mt-6 max-w-xl text-base text-white/90 drop-shadow-heroText sm:text-lg lg:text-xl"
             >
               Discover Sri Lanka through curated inbound tours designed around how you want to feel — wild safaris, misty hill country, ancient heritage, and golden beaches in one seamless journey.
             </motion.p>
@@ -171,7 +176,7 @@ export function HeroVideo() {
                 href="/build-your-trip"
                 variant="outline"
                 size="lg"
-                className="w-full border-white/50 text-white hover:border-white hover:text-white sm:w-auto"
+                className="w-full border-white/80 text-white drop-shadow-heroText hover:border-white hover:text-white sm:w-auto"
               >
                 Build Your Custom Sri Lanka Trip
               </Button>
@@ -188,7 +193,7 @@ export function HeroVideo() {
         >
           <a
             href="#why-sri-lanka"
-            className="flex flex-col items-center gap-2 text-white/60 transition-colors hover:text-white"
+            className="flex flex-col items-center gap-2 text-white/90 drop-shadow-heroText transition-colors hover:text-white"
             aria-label="Scroll to next section"
           >
             <span className="text-xs uppercase tracking-widest">Discover</span>

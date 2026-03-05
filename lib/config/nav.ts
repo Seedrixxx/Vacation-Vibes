@@ -1,7 +1,9 @@
 export const mainNav = [
   { label: "Home", href: "/" },
-  { label: "Packages", href: "/packages" },
+  { label: "Visit Sri Lanka", href: "/visit-sri-lanka" },
+  { label: "Tour Packages", href: "/tour-packages" },
   { label: "Build Your Trip", href: "/build-your-trip" },
+  { label: "Track your trip", href: "/track" },
   { label: "Services", href: "/services" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },

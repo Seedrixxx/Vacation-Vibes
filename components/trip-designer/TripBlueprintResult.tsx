@@ -8,6 +8,15 @@ import { Button } from "@/components/ui/Button";
 import { getWhatsAppLink } from "@/lib/config/nav";
 
 const STORAGE_KEY = "vacation_vibes_blueprint";
+const TRIP_ORDER_STORAGE_PREFIX = "vacation_vibes_trip_order_";
+
+type StoredTripOrder = {
+  invoiceNumber: string;
+  tripOrderId: string;
+  itineraryJson: { days?: Array<{ dayNumber?: number; from?: string; to?: string; title?: string; description?: string }> };
+  pricingJson: { total?: number; deposit?: number; currency?: string; items?: Array<{ label: string; amount: number }> };
+  handoffMode: string;
+};
 
 export type Blueprint = {
   blueprint_id?: string;
@@ -26,11 +35,31 @@ export type Blueprint = {
 export function TripBlueprintResult() {
   const searchParams = useSearchParams();
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
+  const [tripOrder, setTripOrder] = useState<StoredTripOrder | null>(null);
   const [contactSent, setContactSent] = useState(false);
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
+  const [payLoading, setPayLoading] = useState<string | null>(null);
 
   useEffect(() => {
+    const invoice = searchParams.get("invoice");
+    if (invoice) {
+      try {
+        const raw = sessionStorage.getItem(TRIP_ORDER_STORAGE_PREFIX + invoice);
+        if (raw) {
+          const parsed = JSON.parse(raw) as StoredTripOrder;
+          if (parsed.invoiceNumber === invoice) {
+            setTripOrder(parsed);
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+      setTripOrder({ invoiceNumber: invoice, tripOrderId: "", itineraryJson: {}, pricingJson: {}, handoffMode: "AGENT" });
+      return;
+    }
+
     const blueprintId = searchParams.get("blueprint_id");
     if (blueprintId) {
       try {
@@ -74,7 +103,6 @@ export function TripBlueprintResult() {
       return;
     }
 
-    const travel_type = searchParams.get("travel_type");
     const duration = searchParams.get("duration_days") || "7";
     setBlueprint({
       route_outline: "Your personalized route will be confirmed with our team.",
@@ -85,6 +113,23 @@ export function TripBlueprintResult() {
       suggested_package_slug: searchParams.get("package"),
     });
   }, [searchParams]);
+
+  const handlePay = async (mode: "deposit" | "full") => {
+    if (!tripOrder?.invoiceNumber) return;
+    setPayLoading(mode);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoiceNumber: tripOrder.invoiceNumber, mode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Checkout failed");
+      if (data.url) window.location.href = data.url;
+    } catch {
+      setPayLoading(null);
+    }
+  };
 
   const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -126,6 +171,87 @@ export function TripBlueprintResult() {
       setContactSubmitting(false);
     }
   };
+
+  if (tripOrder && tripOrder.invoiceNumber) {
+    const itinerary = tripOrder.itineraryJson?.days ?? [];
+    const pricing = tripOrder.pricingJson;
+    const total = pricing?.total ?? 0;
+    const deposit = pricing?.deposit ?? 0;
+    const isCheckout = tripOrder.handoffMode === "CHECKOUT";
+    const summary = `Hi, I have a trip request. Invoice: ${tripOrder.invoiceNumber}. I’d like to discuss or confirm my booking.`;
+    const whatsAppUrl = `${getWhatsAppLink()}?text=${encodeURIComponent(summary)}`;
+
+    return (
+      <Container className="max-w-2xl">
+        <h1 className="font-serif text-3xl font-semibold text-charcoal">
+          Your Trip Request
+        </h1>
+        <p className="mt-2 text-charcoal/70">
+          Invoice: <strong>{tripOrder.invoiceNumber}</strong>. Save this to track your trip.
+        </p>
+
+        {itinerary.length > 0 && (
+          <div className="mt-8 space-y-4 rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="text-lg font-medium text-charcoal">Itinerary</h2>
+            <ul className="space-y-3">
+              {itinerary.map((day, i) => (
+                <li key={i} className="border-l-2 border-teal/30 pl-3">
+                  <span className="font-medium">Day {day.dayNumber ?? i + 1}</span>
+                  {(day.from || day.to) && (
+                    <span className="text-charcoal/70 text-sm ml-2">
+                      {day.from ?? "—"} → {day.to ?? "—"}
+                    </span>
+                  )}
+                  {day.title && <div className="font-medium mt-1">{day.title}</div>}
+                  {day.description && <p className="text-sm text-charcoal/80 mt-1">{day.description}</p>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {(total > 0 || (pricing?.items?.length ?? 0) > 0) && (
+          <div className="mt-6 rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="text-lg font-medium text-charcoal">Pricing</h2>
+            {pricing?.items?.map((item, i) => (
+              <div key={i} className="flex justify-between mt-2 text-charcoal/80">
+                <span>{item.label}</span>
+                <span>${(item.amount / 100).toLocaleString()}</span>
+              </div>
+            ))}
+            {total > 0 && (
+              <p className="mt-3 font-semibold text-charcoal">
+                Total: ${(total / 100).toLocaleString()} {pricing?.currency ?? "USD"}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="mt-8 flex flex-wrap gap-4">
+          {isCheckout && total > 0 && (
+            <>
+              <Button onClick={() => handlePay("deposit")} disabled={!!payLoading}>
+                {payLoading === "deposit" ? "Redirecting…" : "Pay deposit"}
+              </Button>
+              <Button variant="secondary" onClick={() => handlePay("full")} disabled={!!payLoading}>
+                {payLoading === "full" ? "Redirecting…" : "Pay full"}
+              </Button>
+            </>
+          )}
+          <Button as="a" href={whatsAppUrl} target="_blank" rel="noopener noreferrer" variant={isCheckout ? "outline" : "primary"}>
+            WhatsApp us
+          </Button>
+          <Button as="a" href="/track" variant="outline">
+            Track your trip
+          </Button>
+        </div>
+
+        <p className="mt-8 text-center text-sm text-charcoal/60">
+          <Link href="/build-your-trip" className="underline hover:text-charcoal">Start over</Link>
+        </p>
+      </Container>
+    );
+  }
 
   if (!blueprint) return <Container className="py-12">Loading…</Container>;
 

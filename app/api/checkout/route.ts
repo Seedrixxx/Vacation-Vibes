@@ -1,10 +1,92 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getPackageBySlug } from "@/lib/data/public";
+import { prisma } from "@/lib/prisma";
+import { checkoutBodySchema } from "@/lib/validators/checkout";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-11-20.acacia" });
+function getStripe(): Stripe | null {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) return null;
+  return new Stripe(key, { apiVersion: "2025-02-24.acacia" });
+}
+
+export async function POST(request: Request) {
+  const stripe = getStripe();
+  if (!stripe) {
+    return NextResponse.json({ error: "Checkout not configured" }, { status: 503 });
+  }
+
+  const body = await request.json();
+  const parsed = checkoutBodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const order = await prisma.tripOrder.findUnique({
+    where: { invoiceNumber: parsed.data.invoiceNumber },
+  });
+  if (!order) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+
+  const amount =
+    parsed.data.mode === "deposit"
+      ? order.depositAmount ?? 0
+      : order.totalAmount ?? 0;
+  if (amount <= 0) {
+    return NextResponse.json(
+      { error: "No amount to pay for this mode" },
+      { status: 400 }
+    );
+  }
+
+  const origin = request.headers.get("origin") ?? new URL(request.url).origin;
+  const successUrl = `${origin}/track?invoice=${encodeURIComponent(order.invoiceNumber)}&email=${encodeURIComponent(order.customerEmail)}`;
+  const cancelUrl = `${origin}/packages`;
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      customer_email: order.customerEmail,
+      line_items: [
+        {
+          price_data: {
+            currency: (order.currency || "usd").toLowerCase(),
+            product_data: {
+              name: `Trip ${parsed.data.mode === "deposit" ? "deposit" : "payment"} — ${order.invoiceNumber}`,
+              description: `Vacation Vibes trip ${order.invoiceNumber}`,
+            },
+            unit_amount: amount,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: {
+        tripOrderId: order.id,
+        invoiceNumber: order.invoiceNumber,
+        mode: parsed.data.mode,
+      },
+    });
+
+    return NextResponse.json({ url: session.url });
+  } catch (e) {
+    console.error("Checkout session error:", e);
+    return NextResponse.json({ error: "Checkout failed" }, { status: 500 });
+  }
+}
 
 export async function GET(request: Request) {
+  const stripe = getStripe();
+  if (!stripe) {
+    return NextResponse.json({ error: "Checkout not configured" }, { status: 503 });
+  }
+
   const { searchParams } = new URL(request.url);
   const packageSlug = searchParams.get("package");
   const origin = request.headers.get("origin") ?? new URL(request.url).origin;
