@@ -1,10 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { otherDestinations } from "@/lib/homeData";
+import { viewportDefaults } from "@/lib/motion";
 import type { Destination as DbDestination } from "@/lib/supabase/types";
 
 type DestItem = { id: string; name: string; slug: string; tagline: string; image: string };
@@ -26,9 +27,10 @@ export function BeyondSriLanka({ destinations: dbDestinations }: { destinations?
     ? normalizeDestinations(dbDestinations)
     : otherDestinations.map((d) => ({ id: d.id, name: d.name, slug: d.slug, tagline: d.tagline, image: d.image }));
 
+  const reduceMotion = useReducedMotion();
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+    visible: { opacity: 1, transition: { staggerChildren: reduceMotion ? 0 : 0.1 } },
   };
 
   const itemVariants = {
@@ -62,7 +64,7 @@ export function BeyondSriLanka({ destinations: dbDestinations }: { destinations?
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
+          viewport={viewportDefaults}
           className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 lg:gap-6"
         >
           {items.map((destination) => (

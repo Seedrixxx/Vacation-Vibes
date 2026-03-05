@@ -318,17 +318,19 @@ export const footerColumns: FooterColumn[] = [
     title: "Quick Links",
     links: [
       { label: "Home", href: "/" },
-      { label: "Sri Lanka Tour Packages", href: "/packages" },
+      { label: "Tour Packages", href: "/tour-packages" },
       { label: "Build Your Trip", href: "/build-your-trip" },
       { label: "Services", href: "/services" },
       { label: "About", href: "/about" },
-      { label: "Contact", href: "/contact" },
+      { label: "Contact us", href: "/contact" },
+      { label: "Track your Trip", href: "/track" },
     ],
   },
   {
     title: "Destinations",
     links: [
-      { label: "Sri Lanka", href: "/packages" },
+      { label: "Sri Lanka", href: "/tour-packages?tab=sri-lanka" },
+      { label: "Beyond Sri Lanka", href: "/tour-packages?tab=beyond" },
       { label: "Maldives", href: "/destinations/maldives" },
       { label: "UAE", href: "/destinations/uae" },
     ],

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 
@@ -58,6 +58,8 @@ export function HeroVideo() {
     document.addEventListener("fullscreenchange", onFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
+
+  const isHeroInView = useInView(containerRef, { amount: 0.5, once: false });
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -184,10 +186,13 @@ export function HeroVideo() {
           </motion.div>
         </Container>
 
-        {/* Scroll Indicator */}
+        {/* Scroll Indicator — only animate when hero is in view (useInView) */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={{
+            opacity: isHeroInView ? 1 : 0,
+            y: isHeroInView ? 0 : -10,
+          }}
           transition={{ delay: 1.5, duration: 0.8 }}
           className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
         >
@@ -198,7 +203,7 @@ export function HeroVideo() {
           >
             <span className="text-xs uppercase tracking-widest">Discover</span>
             <motion.svg
-              animate={{ y: [0, 6, 0] }}
+              animate={isHeroInView ? { y: [0, 6, 0] } : { y: 0 }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
               className="h-6 w-6"
               fill="none"

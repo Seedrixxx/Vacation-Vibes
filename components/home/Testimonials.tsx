@@ -1,9 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { testimonials } from "@/lib/homeData";
+import { viewportDefaults } from "@/lib/motion";
 
 function TestimonialCard({
   testimonial,
@@ -12,11 +13,12 @@ function TestimonialCard({
   testimonial: (typeof testimonials)[0];
   featured?: boolean;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+      whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+      viewport={viewportDefaults}
       transition={{ duration: 0.5 }}
       className={`rounded-2xl bg-white p-6 shadow-soft lg:p-8 ${featured ? "lg:col-span-2" : ""}`}
     >

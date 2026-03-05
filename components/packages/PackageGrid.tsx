@@ -4,13 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import type { Package } from "@/lib/supabase/types";
+import type { PackageDisplay } from "@/lib/data/prisma-packages";
 
 export function PackageGrid({
   packages,
   className,
 }: {
-  packages: Package[];
+  packages: PackageDisplay[];
   className?: string;
 }) {
   if (!packages.length) {

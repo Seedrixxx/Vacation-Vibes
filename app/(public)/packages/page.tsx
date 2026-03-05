@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import { getPackages, getDestinations, getDestinationBySlug } from "@/lib/data/public";
+import { getPrismaPackagesForDisplay } from "@/lib/data/prisma-packages";
+import type { PackageDisplay } from "@/lib/data/prisma-packages";
 import { Container } from "@/components/ui/Container";
 import { PackageFilters } from "@/components/packages/PackageFilters";
 import { PackageGrid } from "@/components/packages/PackageGrid";
@@ -15,22 +17,40 @@ export default async function PackagesPage({
   searchParams: Promise<{ destination?: string; travel_type?: string; duration?: string; budget?: string }>;
 }) {
   const params = await searchParams;
-  let packages: Awaited<ReturnType<typeof getPackages>> = [];
+  let packages: PackageDisplay[] = [];
   let destinations: Awaited<ReturnType<typeof getDestinations>> = [];
   try {
-    [packages, destinations] = await Promise.all([getPackages(), getDestinations()]);
-    if (params.destination) {
-      const dest = await getDestinationBySlug(params.destination);
-      if (dest) packages = packages.filter((p) => p.destination_id === dest.id);
+    const [supabasePackages, dests] = await Promise.all([getPackages(), getDestinations()]);
+    destinations = dests;
+    if (supabasePackages.length > 0) {
+      let filtered = [...supabasePackages];
+      if (params.destination) {
+        const dest = await getDestinationBySlug(params.destination);
+        if (dest) filtered = filtered.filter((p) => p.destination_id === dest.id);
+      }
+      if (params.travel_type) filtered = filtered.filter((p) => p.travel_type === params.travel_type);
+      if (params.duration) {
+        const [min, max] = params.duration === "11+" ? [11, 999] : params.duration.split("-").map(Number);
+        filtered = filtered.filter((p) => p.duration_days >= min && (max === undefined || p.duration_days <= max));
+      }
+      if (params.budget) filtered = filtered.filter((p) => p.budget_tier === params.budget);
+      packages = filtered.map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        title: p.title,
+        hero_image_url: p.hero_image_url,
+        duration_days: p.duration_days,
+        price_from: p.price_from ?? 0,
+      }));
+    } else {
+      packages = await getPrismaPackagesForDisplay();
     }
-    if (params.travel_type) packages = packages.filter((p) => p.travel_type === params.travel_type);
-    if (params.duration) {
-      const [min, max] = params.duration === "11+" ? [11, 999] : params.duration.split("-").map(Number);
-      packages = packages.filter((p) => p.duration_days >= min && (max === undefined || p.duration_days <= max));
-    }
-    if (params.budget) packages = packages.filter((p) => p.budget_tier === params.budget);
   } catch {
-    // fallback when DB not configured
+    try {
+      packages = await getPrismaPackagesForDisplay();
+    } catch {
+      // no packages
+    }
   }
 
   return (

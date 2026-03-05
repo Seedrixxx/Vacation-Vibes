@@ -162,7 +162,7 @@ function CheckoutForm() {
       <p className="text-charcoal/70">
         Use a package link or your invoice number to continue.
       </p>
-      <Link href="/visit-sri-lanka">
+      <Link href="/tour-packages">
         <Button>Browse packages</Button>
       </Link>
     </div>
