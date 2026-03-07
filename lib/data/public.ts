@@ -20,12 +20,16 @@ export async function getDestinations(): Promise<Destination[]> {
 }
 
 export async function getExperiences(destinationId?: string): Promise<Experience[]> {
-  const supabase = await createClient();
-  let q = supabase.from("experiences").select("*").order("name");
-  if (destinationId) q = q.eq("destination_id", destinationId);
-  const { data, error } = await q;
-  if (error) throw error;
-  return data ?? [];
+  try {
+    const supabase = await createClient();
+    let q = supabase.from("experiences").select("*").order("name");
+    if (destinationId) q = q.eq("destination_id", destinationId);
+    const { data, error } = await q;
+    if (error) return [];
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getPackages(options?: {

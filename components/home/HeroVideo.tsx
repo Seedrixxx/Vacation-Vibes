@@ -1,21 +1,27 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 
 export function HeroVideo() {
   const [videoError, setVideoError] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(true); // Start muted so autoplay is allowed, then try to unmute
   const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"],
+  });
+  const volume = useTransform(scrollYProgress, [0, 1], [1, 0]);
+
   const ensurePlaying = () => {
     const video = videoRef.current;
     if (!video) return;
-    video.muted = true;
+    video.muted = isMuted;
     video.play().catch(() => setVideoError(true));
   };
 
@@ -23,31 +29,47 @@ export function HeroVideo() {
     ensurePlaying();
   }, []);
 
+  useMotionValueEvent(volume, "change", (v) => {
+    const video = videoRef.current;
+    if (!video || isMuted) return;
+    video.volume = Math.max(0, Math.min(1, v));
+  });
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     video.muted = isMuted;
-    if (!isMuted) video.play().catch(() => {});
-  }, [isMuted]);
+    if (!isMuted) {
+      video.volume = Math.max(0, Math.min(1, volume.get()));
+      video.play().catch(() => {});
+    }
+  }, [isMuted, volume]);
 
   const handleMuteToggle = async () => {
+    const video = videoRef.current;
     if (isMuted) {
+      // Unmute: must set video.muted/volume in the same user gesture so browsers allow sound
+      if (video) {
+        video.muted = false;
+        video.volume = 1;
+      }
+      setIsMuted(false);
       const el = containerRef.current;
       try {
         if (el && !document.fullscreenElement) {
           await el.requestFullscreen();
           setIsFullscreen(true);
         }
-        setIsMuted(false);
       } catch {
-        setIsMuted(false);
+        // Fullscreen failed; unmute still applies
       }
     } else {
+      if (video) video.muted = true;
+      setIsMuted(true);
       if (document.fullscreenElement) {
         await document.exitFullscreen();
         setIsFullscreen(false);
       }
-      setIsMuted(true);
     }
   };
 
@@ -119,12 +141,12 @@ export function HeroVideo() {
           className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/25 to-black/50 pointer-events-none z-[1]"
         />
 
-        {/* Mute / Unmute */}
+        {/* Mute / Unmute — z-[60] so it sits above the fixed Navbar (z-50) and is clickable */}
         <button
           type="button"
           onClick={handleMuteToggle}
-          className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          aria-label={isMuted ? "Unmute (opens fullscreen)" : "Mute"}
+          className="absolute right-4 top-4 z-[60] flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          aria-label={isMuted ? "Unmute video" : "Mute video"}
         >
           {isMuted ? (
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -166,7 +188,7 @@ export function HeroVideo() {
             >
               <Button
                 as="a"
-                href="/packages"
+                href="#packages"
                 variant="primary"
                 size="lg"
                 className="w-full sm:w-auto"

@@ -203,7 +203,6 @@ export function TripBlueprintResult() {
                     </span>
                   )}
                   {day.title && <div className="font-medium mt-1">{day.title}</div>}
-                  {day.description && <p className="text-sm text-charcoal/80 mt-1">{day.description}</p>}
                 </li>
               ))}
             </ul>
@@ -266,12 +265,6 @@ export function TripBlueprintResult() {
       <p className="mt-2 text-charcoal/70">
         Here’s a summary. Contact us to refine and book.
       </p>
-
-      {blueprint.summary_paragraph && (
-        <p className="mt-6 text-charcoal leading-relaxed">
-          {blueprint.summary_paragraph}
-        </p>
-      )}
 
       <div className="mt-8 space-y-6 rounded-2xl bg-white p-6 shadow-soft">
         <div>

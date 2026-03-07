@@ -7,29 +7,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Button } from "@/components/ui/Button";
 import { sriLankaPackages } from "@/lib/homeData";
 import type { Package as DbPackage } from "@/lib/supabase/types";
-
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-1" aria-label={`Rating: ${rating} out of 5 stars`}>
-      {[...Array(5)].map((_, i) => (
-        <svg
-          key={i}
-          className={`h-4 w-4 ${i < Math.floor(rating) ? "text-gold" : "text-charcoal/20"}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          aria-hidden="true"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-      <span className="ml-1 text-sm text-charcoal/60">({rating})</span>
-    </div>
-  );
-}
 
 type PackageCard = {
   id: string;
@@ -79,6 +58,7 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
   const [scrollIndex, setScrollIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [buildTripModalPackage, setBuildTripModalPackage] = useState<PackageCard | null>(null);
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
@@ -104,6 +84,19 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
       ro.disconnect();
     };
   }, [updateScrollState]);
+
+  useEffect(() => {
+    if (!buildTripModalPackage) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setBuildTripModalPackage(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [buildTripModalPackage]);
 
   const scrollTo = (index: number) => {
     const el = scrollRef.current;
@@ -135,16 +128,40 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
   return (
     <section
       id="packages"
-      className="bg-sand py-24 lg:py-40"
+      className="bg-sand py-16 lg:py-24"
       aria-labelledby="packages-heading"
     >
       <Container>
-        <SectionHeading
-          title="Featured Sri Lanka Tour Packages"
-          subtitle="Handcrafted Sri Lanka inbound tour packages designed around different travel styles and vibes."
-          titleClassName="text-4xl sm:text-5xl lg:text-6xl"
-          className="mb-16 lg:mb-20"
-        />
+        {/* Header: title left, link right (Apple-style) */}
+        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <motion.h2
+              id="packages-heading"
+              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+              whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+              viewport={viewportDefaults}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="font-serif text-3xl font-semibold tracking-tight text-charcoal sm:text-4xl lg:text-5xl"
+            >
+              Featured Sri Lanka Tour Packages
+            </motion.h2>
+            <motion.p
+              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+              whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+              viewport={viewportDefaults}
+              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              className="mt-3 text-base text-charcoal/70 sm:text-lg"
+            >
+              Handcrafted Sri Lanka inbound tour packages designed around different travel styles and vibes.
+            </motion.p>
+          </div>
+          <Link
+            href="/tour-packages"
+            className="shrink-0 text-base font-medium text-teal transition-colors hover:text-teal-600 sm:text-lg"
+          >
+            View all packages →
+          </Link>
+        </div>
 
         <motion.div
           variants={containerVariants}
@@ -155,7 +172,7 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
         >
           <div
             ref={scrollRef}
-            className="flex gap-8 overflow-x-auto overflow-y-hidden pb-4 scroll-smooth scrollbar-hide md:pb-0"
+            className="flex gap-6 overflow-x-auto overflow-y-hidden pb-2 scroll-smooth scrollbar-hide"
             style={{
               scrollSnapType: "x mandatory",
               WebkitOverflowScrolling: "touch",
@@ -168,17 +185,25 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
                 key={pkg.id}
                 data-carousel-card
                 variants={itemVariants}
-                whileHover={{ y: -8 }}
                 transition={{ duration: 0.3 }}
-                className="group relative min-w-[min(100%,320px)] max-w-[380px] flex-shrink-0 overflow-hidden rounded-3xl bg-white shadow-soft transition-shadow hover:shadow-lift sm:min-w-[340px] lg:min-w-[360px]"
+                className="group relative flex min-w-[min(100%,300px)] max-w-[340px] flex-shrink-0 flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md sm:min-w-[280px] lg:min-w-[300px]"
                 style={{ scrollSnapAlign: "start" }}
               >
-                {pkg.featured && (
-                  <div className="absolute left-4 top-4 z-10 rounded-full bg-gold px-3 py-1 text-xs font-medium text-charcoal">
-                    Featured
-                  </div>
-                )}
-                <div className="relative aspect-[4/3] overflow-hidden">
+                {/* Card content: label, title, description, then image */}
+                <div className="flex flex-1 flex-col p-6">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-charcoal/60">
+                    {pkg.duration}
+                  </span>
+                  <h3 className="mt-2 font-serif text-xl font-semibold text-charcoal lg:text-2xl">
+                    {pkg.title}
+                  </h3>
+                  <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-charcoal/70">
+                    {pkg.highlights.length > 0
+                      ? pkg.highlights.join(", ")
+                      : "Curated experiences across Sri Lanka."}
+                  </p>
+                </div>
+                <div className="relative mt-auto aspect-[4/3] overflow-hidden">
                   <Link href={`/packages/${pkg.slug}`} className="block h-full w-full">
                     <Image
                       src={pkg.image}
@@ -188,91 +213,117 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
                   </Link>
-                </div>
-                <div className="p-6 lg:p-8">
-                  <div className="flex items-start justify-between gap-4">
-                    <h3 className="font-serif text-xl font-semibold text-charcoal lg:text-2xl">
-                      {pkg.title}
-                    </h3>
-                    <span className="flex-shrink-0 rounded-full bg-teal/10 px-3 py-1 text-sm font-medium text-teal">
-                      {pkg.duration}
-                    </span>
-                  </div>
-                  <div className="mt-3">
-                    <StarRating rating={pkg.rating} />
-                  </div>
-                  {pkg.highlights.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {pkg.highlights.map((highlight) => (
-                        <span
-                          key={highlight}
-                          className="rounded-full bg-sand px-3 py-1 text-xs text-charcoal/70"
-                        >
-                          {highlight}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="mt-6 flex items-end justify-between border-t border-charcoal/10 pt-6">
-                    <div>
-                      <p className="text-xs text-charcoal/50">Starting from</p>
-                      <p className="text-2xl font-semibold text-charcoal">
-                        ${pkg.price_from.toLocaleString()}
-                        <span className="text-sm font-normal text-charcoal/50"> / person</span>
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button as="a" href={`/packages/${pkg.slug}`} size="sm" variant="outline">
-                        View
-                      </Button>
-                      <Button as="a" href={`/build-your-trip?package=${pkg.slug}`} size="sm">
-                        Customize
-                      </Button>
-                    </div>
-                  </div>
+                  {/* Plus button: open Build your trip modal */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setBuildTripModalPackage(pkg);
+                    }}
+                    className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-charcoal/90 text-white transition hover:bg-charcoal"
+                    aria-label={`Build your trip with ${pkg.title}`}
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
                 </div>
               </motion.article>
             ))}
           </div>
 
-          {/* Carousel navigation */}
+          {/* Navigation: small circular grey buttons at bottom-right */}
           {cards.length > 1 && (
-            <>
+            <div className="mt-6 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => scrollTo(Math.max(0, scrollIndex - 1))}
                 disabled={!canScrollLeft}
-                className="absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-lg transition hover:bg-white disabled:pointer-events-none disabled:opacity-40 md:left-4 md:block lg:-left-4"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 text-charcoal transition hover:bg-neutral-300 disabled:pointer-events-none disabled:opacity-40"
                 aria-label="Previous packages"
               >
-                <ChevronLeft className="h-6 w-6 text-charcoal" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 type="button"
                 onClick={() => scrollTo(Math.min(cards.length - 1, scrollIndex + 1))}
                 disabled={!canScrollRight}
-                className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-lg transition hover:bg-white disabled:pointer-events-none disabled:opacity-40 md:right-4 md:block lg:-right-4"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200 text-charcoal transition hover:bg-neutral-300 disabled:pointer-events-none disabled:opacity-40"
                 aria-label="Next packages"
               >
-                <ChevronRight className="h-6 w-6 text-charcoal" />
+                <ChevronRight className="h-5 w-5" />
               </button>
-              <div className="mt-8 flex justify-center gap-2 md:mt-10">
-                {cards.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => scrollTo(i)}
-                    className={`h-2 rounded-full transition-all ${
-                      i === scrollIndex ? "w-8 bg-teal" : "w-2 bg-charcoal/25 hover:bg-charcoal/40"
-                    }`}
-                    aria-label={`Go to package ${i + 1}`}
-                    aria-current={i === scrollIndex ? "true" : undefined}
-                  />
-                ))}
-              </div>
-            </>
+            </div>
           )}
         </motion.div>
+
+        {/* Build your trip modal — same page, centered overlay */}
+        {buildTripModalPackage && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            aria-modal="true"
+            role="dialog"
+            aria-labelledby="build-trip-modal-title"
+          >
+            <div
+              className="absolute inset-0 bg-charcoal/40 backdrop-blur-sm"
+              onClick={() => setBuildTripModalPackage(null)}
+              aria-hidden="true"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative aspect-[16/10] w-full bg-charcoal/10">
+                <Image
+                  src={buildTripModalPackage.image}
+                  alt={buildTripModalPackage.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 512px) 100vw, 32rem"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setBuildTripModalPackage(null)}
+                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white transition hover:bg-black/60"
+                aria-label="Close"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <div className="p-8 pr-12">
+                <p className="text-sm font-medium text-charcoal/60">Build your trip</p>
+                <h3 id="build-trip-modal-title" className="mt-1 font-serif text-2xl font-semibold text-charcoal sm:text-3xl">
+                  Customize {buildTripModalPackage.title}
+                </h3>
+                <p className="mt-4 text-base leading-relaxed text-charcoal/70">
+                  Start from this package and tailor your Sri Lanka trip — dates, stays, and experiences — with our trip builder.
+                </p>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href={`/build-your-trip?package=${encodeURIComponent(buildTripModalPackage.slug)}`}
+                    className="inline-flex items-center justify-center rounded-xl bg-teal px-5 py-3 text-center font-medium text-white transition hover:bg-teal-600"
+                  >
+                    Continue to Build Your Trip
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setBuildTripModalPackage(null)}
+                    className="inline-flex items-center justify-center rounded-xl border border-charcoal/20 px-5 py-3 font-medium text-charcoal transition hover:bg-charcoal/5"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
         {/* Trust Microcopy */}
         <motion.div

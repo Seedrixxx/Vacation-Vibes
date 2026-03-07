@@ -31,7 +31,6 @@ export default async function BlogPage() {
                   <h2 className="font-serif text-xl font-semibold text-charcoal group-hover:text-teal">
                     {post.title}
                   </h2>
-                  {post.excerpt && <p className="mt-1 text-charcoal/70">{post.excerpt}</p>}
                   {post.published_at && (
                     <time className="mt-2 block text-sm text-charcoal/50" dateTime={post.published_at}>
                       {new Date(post.published_at).toLocaleDateString()}

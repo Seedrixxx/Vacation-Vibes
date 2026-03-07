@@ -110,13 +110,6 @@ export default async function PackageDetailPage({ params }: PageProps) {
       </section>
 
       <Container className="py-12 lg:py-16">
-        {p.summary && (
-          <div className="prose prose-charcoal max-w-none">
-            <h2 className="font-serif text-2xl font-semibold text-charcoal">Overview</h2>
-            <p className="mt-2 text-charcoal/80">{p.summary}</p>
-          </div>
-        )}
-
         {highlights.length > 0 && (
           <div className="mt-8">
             <h2 className="font-serif text-xl font-semibold text-charcoal">Highlights</h2>
@@ -146,7 +139,6 @@ export default async function PackageDetailPage({ params }: PageProps) {
                       {day.fromLocation ?? "—"} → {day.toLocation ?? "—"}
                     </div>
                   )}
-                  <p className="mt-2 text-charcoal/80">{day.description}</p>
                   {day.modules.length > 0 && (
                     <ul className="mt-2 list-inside list-disc text-sm text-charcoal/70">
                       {day.modules.map((m, i) => (

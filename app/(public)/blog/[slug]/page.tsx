@@ -64,7 +64,6 @@ export default async function BlogPostPage({ params }: PageProps) {
             {post.author_name && ` · ${post.author_name}`}
           </time>
         )}
-        {post.excerpt && <p className="mt-4 text-lg text-charcoal/70">{post.excerpt}</p>}
         <div
           className="prose prose-charcoal mt-8 max-w-none"
           dangerouslySetInnerHTML={{ __html: content }}

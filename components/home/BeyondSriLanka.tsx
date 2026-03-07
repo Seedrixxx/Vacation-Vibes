@@ -89,9 +89,6 @@ export function BeyondSriLanka({ destinations: dbDestinations }: { destinations?
                   <h3 className="font-serif text-lg font-semibold text-white lg:text-xl">
                     {destination.name}
                   </h3>
-                  <p className="mt-1 text-xs text-white/70 lg:text-sm">
-                    {destination.tagline}
-                  </p>
                 </div>
 
                 {/* Hover Arrow */}

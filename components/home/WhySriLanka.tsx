@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { whyUsPoints } from "@/lib/homeData";
 import { viewportDefaults } from "@/lib/motion";
@@ -32,6 +32,7 @@ const iconMap: Record<string, JSX.Element> = {
 
 export function WhySriLanka() {
   const sectionRef = useRef<HTMLElement>(null);
+  const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -81,7 +82,12 @@ export function WhySriLanka() {
                 transition={{ duration: 0.6 }}
                 className="space-y-4"
               >
-                <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-teal/10">
+                <div
+                  className={`aspect-[3/4] overflow-hidden rounded-2xl bg-teal/10 transition-all duration-300 ${hoveredFeature === "temple" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
+                  onMouseEnter={() => setHoveredFeature("temple")}
+                  onMouseLeave={() => setHoveredFeature(null)}
+                  role="presentation"
+                >
                   <img
                     src="/images/collage/sigiriya.jpg"
                     alt="Sigiriya Rock Fortress"
@@ -89,7 +95,12 @@ export function WhySriLanka() {
                     loading="lazy"
                   />
                 </div>
-                <div className="aspect-square overflow-hidden rounded-2xl bg-gold/10">
+                <div
+                  className={`aspect-square overflow-hidden rounded-2xl bg-gold/10 transition-all duration-300 ${hoveredFeature === "train" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
+                  onMouseEnter={() => setHoveredFeature("train")}
+                  onMouseLeave={() => setHoveredFeature(null)}
+                  role="presentation"
+                >
                   <img
                     src="/images/collage/tea.jpg"
                     alt="Ceylon tea plantations"
@@ -105,7 +116,12 @@ export function WhySriLanka() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="mt-8 space-y-4"
               >
-                <div className="aspect-square overflow-hidden rounded-2xl bg-sand-400/50">
+                <div
+                  className={`aspect-square overflow-hidden rounded-2xl bg-sand-400/50 transition-all duration-300 ${hoveredFeature === "beach" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
+                  onMouseEnter={() => setHoveredFeature("beach")}
+                  onMouseLeave={() => setHoveredFeature(null)}
+                  role="presentation"
+                >
                   <img
                     src="/images/collage/beach.jpg"
                     alt="Sri Lanka beaches"
@@ -113,7 +129,12 @@ export function WhySriLanka() {
                     loading="lazy"
                   />
                 </div>
-                <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-teal/10">
+                <div
+                  className={`aspect-[3/4] overflow-hidden rounded-2xl bg-teal/10 transition-all duration-300 ${hoveredFeature === "wildlife" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
+                  onMouseEnter={() => setHoveredFeature("wildlife")}
+                  onMouseLeave={() => setHoveredFeature(null)}
+                  role="presentation"
+                >
                   <img
                     src="/images/collage/elephant.jpg"
                     alt="Sri Lanka elephants"
@@ -152,23 +173,33 @@ export function WhySriLanka() {
               variants={containerVariants}
               className="mt-10 grid gap-6 sm:grid-cols-2"
             >
-              {whyUsPoints.map((point) => (
-                <motion.div
-                  key={point.title}
-                  variants={itemVariants}
-                  className="flex gap-4"
-                >
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
-                    {iconMap[point.icon]}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-charcoal">{point.title}</h3>
-                    <p className="mt-1 text-sm text-charcoal/60">
-                      {point.description}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
+              {whyUsPoints.map((point) => {
+                const isHighlighted = hoveredFeature === point.icon;
+                return (
+                  <motion.div
+                    key={point.title}
+                    variants={itemVariants}
+                    className={`flex gap-4 rounded-xl p-3 transition-all duration-300 ${
+                      isHighlighted
+                        ? "bg-gold/15 ring-2 ring-gold/60 scale-[1.02]"
+                        : ""
+                    }`}
+                  >
+                    <div
+                      className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-gold transition-colors duration-300 ${
+                        isHighlighted ? "bg-gold/25" : "bg-gold/10"
+                      }`}
+                    >
+                      {iconMap[point.icon]}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-charcoal">
+                        {point.title}
+                      </h3>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           </motion.div>
         </div>

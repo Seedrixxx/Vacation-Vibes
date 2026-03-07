@@ -106,7 +106,6 @@ export default async function TourPackagesPage({
                           ))}
                         </div>
                       )}
-                      <p className="mt-2 line-clamp-2 text-sm text-charcoal/70">{pkg.summary}</p>
                       {minPrice != null && (
                         <p className="mt-3 font-medium text-teal">
                           From ${(minPrice / 100).toLocaleString()}

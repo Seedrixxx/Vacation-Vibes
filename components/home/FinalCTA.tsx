@@ -9,10 +9,15 @@ export function FinalCTA() {
   const reduceMotion = useReducedMotion();
   return (
     <section
-      className="gradient-cta py-20 lg:py-32"
+      className="relative overflow-hidden py-20 lg:py-32"
       aria-labelledby="final-cta-heading"
     >
-      <Container>
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url(/images/footer.jpg)" }}
+      />
+      <div className="absolute inset-0 bg-charcoal/70" />
+      <Container className="relative z-10">
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 30 }}
           whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
@@ -27,10 +32,6 @@ export function FinalCTA() {
             Ready to Experience Sri Lanka{" "}
             <span className="text-gold">in Every Vibe?</span>
           </h2>
-
-          <p className="mx-auto mt-6 max-w-xl text-lg text-white/80">
-            Start planning your Sri Lanka holiday today with a trusted inbound travel specialist.
-          </p>
 
           <div className="mt-10 flex justify-center">
             <Button

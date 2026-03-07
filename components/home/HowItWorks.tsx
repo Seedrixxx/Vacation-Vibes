@@ -89,9 +89,6 @@ export function HowItWorks() {
                 <h3 className="font-serif text-xl font-semibold text-charcoal lg:text-2xl">
                   {step.title}
                 </h3>
-                <p className="mx-auto mt-3 max-w-xs text-charcoal/60">
-                  {step.description}
-                </p>
 
                 {/* Mobile Arrow */}
                 {index < howItWorksSteps.length - 1 && (
