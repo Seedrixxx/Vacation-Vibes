@@ -8,8 +8,8 @@ export function HomeTrustStrip() {
   const reduceMotion = useReducedMotion();
   return (
     <motion.section
-      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-      whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+      initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={viewportDefaults}
       transition={{ duration: 0.5 }}
       className="border-y border-charcoal/10 bg-white py-4"

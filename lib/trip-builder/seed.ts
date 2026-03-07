@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 
 type OptionType =
   | "TRIP_TYPE"
@@ -232,7 +232,7 @@ export async function runSeed(prisma: PrismaClient): Promise<{ optionsCreated: n
       priceType: row.priceType,
       priceAmount: row.priceAmount ?? null,
       currency: row.currency ?? "USD",
-      metadataJson: row.metadataJson ?? null,
+      metadataJson: row.metadataJson ?? Prisma.JsonNull,
     };
     if (existing) {
       await prisma.tripBuilderOption.update({

@@ -137,8 +137,8 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
           <div>
             <motion.h2
               id="packages-heading"
-              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-              whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+              initial={reduceMotion ? undefined : { opacity: 0, y: 20 }}
+              whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
               viewport={viewportDefaults}
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="font-serif text-3xl font-semibold tracking-tight text-charcoal sm:text-4xl lg:text-5xl"
@@ -146,8 +146,8 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
               Featured Sri Lanka Tour Packages
             </motion.h2>
             <motion.p
-              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-              whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+              initial={reduceMotion ? undefined : { opacity: 0, y: 20 }}
+              whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
               viewport={viewportDefaults}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
               className="mt-3 text-base text-charcoal/70 sm:text-lg"
@@ -327,8 +327,8 @@ export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
 
         {/* Trust Microcopy */}
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-          whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+          initial={reduceMotion ? undefined : { opacity: 0, y: 20 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           viewport={viewportDefaults}
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-center"

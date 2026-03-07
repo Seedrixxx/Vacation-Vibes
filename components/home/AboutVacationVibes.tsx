@@ -15,8 +15,8 @@ export function AboutVacationVibes() {
     >
       <Container>
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-          whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+          initial={reduceMotion ? undefined : { opacity: 0, y: 20 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           viewport={viewportDefaults}
           transition={{ duration: 0.6 }}
           className="mx-auto max-w-3xl text-center"

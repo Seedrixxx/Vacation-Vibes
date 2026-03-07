@@ -76,8 +76,8 @@ export function WhySriLanka() {
           >
             <div className="grid grid-cols-2 gap-4">
               <motion.div
-                initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
-                whileInView={reduceMotion ? false : { opacity: 1, scale: 1 }}
+                initial={reduceMotion ? undefined : { opacity: 0, scale: 0.9 }}
+                whileInView={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
                 viewport={viewportDefaults}
                 transition={{ duration: 0.6 }}
                 className="space-y-4"
@@ -110,8 +110,8 @@ export function WhySriLanka() {
                 </div>
               </motion.div>
               <motion.div
-                initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
-                whileInView={reduceMotion ? false : { opacity: 1, scale: 1 }}
+                initial={reduceMotion ? undefined : { opacity: 0, scale: 0.9 }}
+                whileInView={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
                 viewport={viewportDefaults}
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="mt-8 space-y-4"
