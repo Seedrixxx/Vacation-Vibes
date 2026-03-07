@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { TripDesignerWizard } from "@/components/trip-designer/TripDesignerWizard";
 import { getExperiences } from "@/lib/data/public";
 
@@ -11,7 +12,9 @@ export default async function BuildYourTripPage() {
   const experiences = await getExperiences();
   return (
     <div className="min-h-screen bg-sand py-12 lg:py-20">
-      <TripDesignerWizard experiences={experiences} />
+      <Suspense fallback={<div className="flex min-h-[40rem] items-center justify-center text-charcoal/60">Loading...</div>}>
+        <TripDesignerWizard experiences={experiences} />
+      </Suspense>
     </div>
   );
 }

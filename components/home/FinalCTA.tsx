@@ -19,8 +19,8 @@ export function FinalCTA() {
       <div className="absolute inset-0 bg-charcoal/70" />
       <Container className="relative z-10">
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-          whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+          initial={reduceMotion ? undefined : { opacity: 0, y: 30 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           viewport={viewportDefaults}
           transition={{ duration: 0.8 }}
           className="mx-auto max-w-3xl text-center"

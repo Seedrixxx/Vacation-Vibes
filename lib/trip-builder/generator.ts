@@ -97,11 +97,12 @@ export function generateItinerary(
       const isOptional = mod.endsWith(OPTIONAL_SUFFIX);
       const key = isOptional ? mod.slice(0, -OPTIONAL_SUFFIX.length) : mod;
       if (isOptional) {
+        const val = inputs[key];
         const enabled =
           optionalModulesSet.has(key) ||
-          inputs[key] === true ||
-          inputs[key] === "true" ||
-          inputs[key] === 1;
+          val === "true" ||
+          val === 1 ||
+          (typeof val === "boolean" && val);
         return enabled;
       }
       return true;

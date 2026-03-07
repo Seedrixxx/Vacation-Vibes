@@ -16,8 +16,8 @@ function TestimonialCard({
   const reduceMotion = useReducedMotion();
   return (
     <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-      whileInView={reduceMotion ? false : { opacity: 1, y: 0 }}
+      initial={reduceMotion ? undefined : { opacity: 0, y: 20 }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={viewportDefaults}
       transition={{ duration: 0.5 }}
       className={`rounded-2xl bg-white p-6 shadow-soft lg:p-8 ${featured ? "lg:col-span-2" : ""}`}
