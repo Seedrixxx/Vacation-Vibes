@@ -36,3 +36,5 @@ next-env.d.ts
 # large media (use LFS or host elsewhere)
 public/images/Cinematic.mp4
 *.mp4
+Archive.zip
+*.zip
