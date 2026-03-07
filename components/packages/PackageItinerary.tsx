@@ -23,9 +23,7 @@ export function PackageItinerary({ days }: { days: ItineraryDay[] }) {
                 <span className="ml-2 text-sm font-normal text-charcoal/60">— {day.location}</span>
               )}
             </AccordionTrigger>
-            <AccordionContent>
-              <p className="whitespace-pre-wrap text-charcoal/70">{day.description ?? ""}</p>
-            </AccordionContent>
+            <AccordionContent />
           </AccordionItem>
         ))}
       </Accordion>

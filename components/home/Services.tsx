@@ -75,6 +75,7 @@ export function Services() {
         <SectionHeading
           title="Services"
           subtitle="Custom Sri Lanka Tours, Visa Assistance, Airport Transfers, Hotel Bookings"
+          align="center"
           className="mb-12"
         />
 
@@ -83,7 +84,7 @@ export function Services() {
           initial="hidden"
           whileInView="visible"
           viewport={viewportDefaults}
-          className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5"
+          className="mx-auto grid max-w-5xl grid-cols-4 gap-6"
         >
           {services.map((service) => (
             <motion.div

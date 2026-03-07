@@ -20,74 +20,40 @@ Production-ready Phase 1: public website, admin CMS, Trip Designer, deposit paym
 
 ## Setup
 
-### 1. Install dependencies
+**Full step-by-step instructions:** see **[SETUP.md](./SETUP.md)** (database, env vars, Stripe, Supabase optional, run locally).
+
+### Quick start
 
 ```bash
-pnpm install
-# or
 npm install
-```
-
-### 2. Environment variables
-
-Copy `.env.example` to `.env.local` and fill in:
-
-- `DATABASE_URL` (PostgreSQL for Prisma), `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (admin login)
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (legacy)
-- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
-- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (admin image uploads)
-- `NEXT_PUBLIC_GA4_ID` (optional)
-- `RESEND_API_KEY` (optional; inquiry + deposit emails), `RESEND_FROM_EMAIL`, `ADMIN_EMAIL`
-- `DEFAULT_DEPOSIT_AMOUNT` (e.g. 500)
-- `NEXT_PUBLIC_WHATSAPP_NUMBER` (e.g. 94771234567)
-- `NEXT_PUBLIC_APP_URL` (e.g. https://yoursite.com, for sitemap/redirects)
-
-### 3. Supabase
-
-1. Create a Supabase project.
-2. In SQL Editor, run in order:
-   - `db/migrations/001_initial_schema.sql`
-   - `db/migrations/002_rls_policies.sql`
-   - `db/migrations/003_storage_bucket.sql` (for admin image uploads)
-   - `db/seed.sql`
-3. In Authentication → Providers, enable Email.
-4. Create an admin user (e.g. your email + password) for admin login.
-
-### 4. Stripe
-
-1. Create a Stripe account and get **Secret key** and **Webhook signing secret**.
-2. For local webhook testing: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
-3. Use the webhook signing secret from that command in `STRIPE_WEBHOOK_SECRET`.
-
-### 5. Run locally
-
-```bash
-pnpm dev
-# or
+cp .env.example .env
+# Edit .env: DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, ADMIN_EMAIL, ADMIN_PASSWORD, etc.
+npx prisma generate
+npx prisma migrate dev --name init   # or npx prisma db push
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+- **App:** [http://localhost:3000](http://localhost:3000)
+- **Admin:** [http://localhost:3000/admin/login](http://localhost:3000/admin/login) — sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` (NextAuth credentials; see `lib/auth.ts`).
 
-### 6. Prisma (Trip Commerce)
+<details>
+<summary>Environment variables (summary)</summary>
 
-```bash
-npx prisma migrate dev --name trip_commerce
-npx prisma generate
-```
+Copy `.env.example` to `.env` and fill in:
 
-Creates Package, TripOrder, ItineraryTemplate, TripBuilderOption, PaymentReceipt, InvoiceSequence, etc. Ensure `DATABASE_URL` is set in `.env`.
+- `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- `STRIPE_*`, `CLOUDINARY_*`, optional: Supabase, Resend, GA4, WhatsApp, etc.
 
-### 7. Admin
+See [SETUP.md](./SETUP.md) for the full table.
 
-- Go to [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
-- Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` (NextAuth credentials).
+</details>
+
+### Admin
+
 - **Dashboard**: Tours, Destinations, Testimonials, Trip Requests (Prisma).
 - **Packages** (Prisma): CRUD for prebuilt packages (days, list items, pricing options). Images via Cloudinary (`POST /api/upload/cloudinary`).
-- **Trip Builder**: Options (wizard choices) and Itinerary Templates. Use "Seed Sri Lanka templates" for default templates.
+- **Trip Builder**: Options (wizard choices) and Itinerary Templates. Use **Seed Sri Lanka Defaults** in Admin → Trip Builder to create options (cities, durations, activities, hotel, transport, meal plan) and 6N/7D, 9N/10D, 13N/14D Sri Lanka inbound templates. Re-running is idempotent. Alternatively run `npx prisma db seed` to seed from the CLI.
 - **Trip Orders**: List and detail; filter by status; update trip status (PENDING → PAID → PROCESSING → APPROVED).
-
-**Dev seed**: After running the seed, you can log in with any user created in Supabase Auth. There is no separate “admin role” in seed; protect admin by only creating one Supabase user for yourself.
 
 ## Scripts
 

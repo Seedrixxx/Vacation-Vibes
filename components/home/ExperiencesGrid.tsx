@@ -81,9 +81,6 @@ export function ExperiencesGrid({ experiences: dbExperiences }: { experiences?: 
                 <h3 className="font-serif text-xl font-semibold text-white">
                   {experience.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/80">
-                  {experience.description}
-                </p>
                 <motion.div className="mt-4">
                   <Button
                     as="a"

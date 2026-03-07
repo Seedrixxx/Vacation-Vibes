@@ -1,0 +1,18 @@
+{"sessionId":"09c31f","location":"HeroVideo.tsx:ensurePlaying","message":"ensurePlaying ran","data":{"isMuted":true,"videoMutedBefore":true},"timestamp":1772785155252,"hypothesisId":"D"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted","message":"Effect isMuted/volume ran","data":{"isMuted":true,"hasVideo":true,"videoMutedBefore":true},"timestamp":1772785155253,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted:after","message":"After setting video.muted","data":{"videoMutedAfter":true},"timestamp":1772785155253,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:ensurePlaying","message":"ensurePlaying ran","data":{"isMuted":true,"videoMutedBefore":true},"timestamp":1772785155256,"hypothesisId":"D"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted","message":"Effect isMuted/volume ran","data":{"isMuted":true,"hasVideo":true,"videoMutedBefore":true},"timestamp":1772785155256,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted:after","message":"After setting video.muted","data":{"videoMutedAfter":true},"timestamp":1772785155256,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:ensurePlaying","message":"ensurePlaying ran","data":{"isMuted":true,"videoMutedBefore":true},"timestamp":1772785590892,"hypothesisId":"D"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted","message":"Effect isMuted/volume ran","data":{"isMuted":true,"hasVideo":true,"videoMutedBefore":true},"timestamp":1772785590892,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted:after","message":"After setting video.muted","data":{"videoMutedAfter":true},"timestamp":1772785590892,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:ensurePlaying","message":"ensurePlaying ran","data":{"isMuted":true,"videoMutedBefore":true},"timestamp":1772785590897,"hypothesisId":"D"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted","message":"Effect isMuted/volume ran","data":{"isMuted":true,"hasVideo":true,"videoMutedBefore":true},"timestamp":1772785590897,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted:after","message":"After setting video.muted","data":{"videoMutedAfter":true},"timestamp":1772785590897,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:ensurePlaying","message":"ensurePlaying ran","data":{"isMuted":true,"videoMutedBefore":true},"timestamp":1772785595914,"hypothesisId":"D"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted","message":"Effect isMuted/volume ran","data":{"isMuted":true,"hasVideo":true,"videoMutedBefore":true},"timestamp":1772785595914,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted:after","message":"After setting video.muted","data":{"videoMutedAfter":true},"timestamp":1772785595914,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted:after","message":"After setting video.muted","data":{"videoMutedAfter":true},"timestamp":1772785595916,"hypothesisId":"C"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:ensurePlaying","message":"ensurePlaying ran","data":{"isMuted":true,"videoMutedBefore":true},"timestamp":1772785595916,"hypothesisId":"D"}
+{"sessionId":"09c31f","location":"HeroVideo.tsx:useEffect:isMuted","message":"Effect isMuted/volume ran","data":{"isMuted":true,"hasVideo":true,"videoMutedBefore":true},"timestamp":1772785595916,"hypothesisId":"C"}

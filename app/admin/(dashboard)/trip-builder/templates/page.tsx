@@ -55,7 +55,7 @@ export default async function TripBuilderTemplatesPage() {
             {templates.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-charcoal/60 py-8">
-                  No templates. Use &quot;Seed Sri Lanka templates&quot; or create one.
+                  No templates. Use &quot;Seed Sri Lanka Defaults&quot; (above) or create one.
                 </TableCell>
               </TableRow>
             ) : (

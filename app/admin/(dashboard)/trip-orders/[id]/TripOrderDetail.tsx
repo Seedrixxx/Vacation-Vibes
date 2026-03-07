@@ -130,7 +130,6 @@ export function TripOrderDetail({ order }: { order: OrderWithRelations }) {
                   </span>
                 ) : null}
                 {day.title && <div className="font-medium mt-1">{day.title}</div>}
-                {day.description && <p className="text-sm text-charcoal/80 mt-1">{day.description}</p>}
               </li>
             ))}
           </ul>
