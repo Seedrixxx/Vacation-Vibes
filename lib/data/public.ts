@@ -1,9 +1,10 @@
 import type { Destination, Experience, BlogPost, ItineraryDay } from "@/lib/supabase/types";
 import type { PublicPackage } from "@/lib/types/package";
-import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
 import * as packageRepository from "@/lib/repositories/package.repository";
 import * as destinationRepository from "@/lib/repositories/destination.repository";
 import * as experienceRepository from "@/lib/repositories/experience.repository";
+import * as blogRepository from "@/lib/repositories/blog.repository";
 
 export const TAGS = {
   destinations: "destinations",
@@ -50,42 +51,28 @@ export async function getPackageBySlug(slug: string): Promise<PublicPackage | nu
 }
 
 export async function getItineraryDays(packageId: string): Promise<ItineraryDay[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("itinerary_days")
-    .select("*")
-    .eq("package_id", packageId)
-    .order("day_number");
-  if (error) throw error;
-  return data ?? [];
+  const days = await prisma.packageDay.findMany({
+    where: { packageId },
+    orderBy: { order: "asc" },
+  });
+  return days.map((d) => ({
+    id: d.id,
+    package_id: d.packageId,
+    day_number: d.dayNumber,
+    title: d.title ?? `Day ${d.dayNumber}`,
+    description: d.description,
+    location: d.fromLocation ?? d.toLocation ?? null,
+    image_url: d.dayImage,
+    created_at: new Date().toISOString(),
+  })) as ItineraryDay[];
 }
 
 export async function getBlogPosts(limit?: number): Promise<BlogPost[]> {
-  const supabase = await createClient();
-  let q = supabase
-    .from("blog_posts")
-    .select("*")
-    .eq("is_published", true)
-    .order("published_at", { ascending: false });
-  if (limit) q = q.limit(limit);
-  const { data, error } = await q;
-  if (error) throw error;
-  return data ?? [];
+  return blogRepository.getBlogPosts(limit);
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("blog_posts")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_published", true)
-    .single();
-  if (error) {
-    if (error.code === "PGRST116") return null;
-    throw error;
-  }
-  return data;
+  return blogRepository.getBlogPostBySlug(slug);
 }
 
 export async function getDestinationBySlug(slug: string): Promise<Destination | null> {

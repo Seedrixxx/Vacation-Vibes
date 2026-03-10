@@ -1,16 +1,14 @@
 -- ContentEmbedding table for chat vector search (packages, destinations, experiences, faq).
--- Requires pgvector. Enable it before running migrations:
---   Local: install pgvector (e.g. brew install pgvector), then in psql: CREATE EXTENSION IF NOT EXISTS vector;
---   Hosted (Supabase/Neon/etc.): enable "vector" in the provider dashboard, then run migrations.
--- Optional: after seeding embeddings, add a vector index for faster search, e.g.:
---   CREATE INDEX "ContentEmbedding_embedding_idx" ON "ContentEmbedding" USING ivfflat ("embedding" vector_cosine_ops) WITH (lists = 100);
+-- Uses BYTEA for embedding so migration runs without pgvector. To use pgvector later:
+--   CREATE EXTENSION IF NOT EXISTS vector;
+--   ALTER TABLE "ContentEmbedding" ALTER COLUMN "embedding" TYPE vector(1536) USING embedding::text::vector(1536);
 
 CREATE TABLE "ContentEmbedding" (
     "id" TEXT NOT NULL,
     "contentType" TEXT NOT NULL,
     "contentId" TEXT,
     "chunkText" TEXT NOT NULL,
-    "embedding" vector(1536) NOT NULL,
+    "embedding" BYTEA NOT NULL,
     "metadata" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

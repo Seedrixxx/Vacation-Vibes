@@ -28,13 +28,17 @@ model Tour {
 }
 
 model Destination {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  heroImage   String?
-  description String?
-  activities  String[] @default([])
-  createdAt   DateTime @default(now())
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  country      String?
+  focusInbound Boolean       @default(false)
+  heroImage    String?
+  description  String?
+  summary      String?
+  activities   String[]      @default([])
+  createdAt    DateTime      @default(now())
+  experiences  Experience[]
 }
 
 model Testimonial {
@@ -45,6 +49,56 @@ model Testimonial {
   review    String
   image     String?
   createdAt DateTime @default(now())
+}
+
+model BlogPost {
+  id           String    @id @default(cuid())
+  title        String
+  slug         String    @unique
+  excerpt      String?
+  content      String?
+  heroImageUrl String?
+  authorName   String?
+  publishedAt  DateTime?
+  isPublished  Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+}
+
+model Experience {
+  id            String       @id @default(cuid())
+  name          String
+  slug          String       @unique
+  destinationId String?
+  destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  tags          String[]     @default([])
+  priceFrom     Int?
+  imageUrl      String?
+  description   String?
+  createdAt     DateTime     @default(now())
+}
+
+model Inquiry {
+  id                 String   @id @default(cuid())
+  name               String
+  email              String
+  phone              String?
+  message            String?
+  sourcePage         String?
+  tripDesignerPayload Json?
+  createdAt          DateTime @default(now())
+}
+
+model Deposit {
+  id                    String   @id @default(cuid())
+  inquiryId             String?
+  packageId             String?
+  amount                Int
+  currency              String
+  status                String
+  stripeSessionId       String?
+  stripePaymentIntentId String?
+  customerEmail         String?
+  createdAt             DateTime @default(now())
 }
 
 enum TripRequestStatus {

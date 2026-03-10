@@ -21,16 +21,22 @@ function slugify(s: string) {
 type DestinationFormData = {
   name: string;
   slug: string;
+  country: string | null;
+  focusInbound: boolean;
   heroImage: string | null;
   description: string | null;
+  summary: string | null;
   activities: string[];
 };
 
 const emptyForm: DestinationFormData = {
   name: "",
   slug: "",
+  country: null,
+  focusInbound: false,
   heroImage: null,
   description: "",
+  summary: null,
   activities: [],
 };
 
@@ -46,8 +52,11 @@ export function DestinationForm({
       ? {
           name: destination.name,
           slug: destination.slug,
+          country: destination.country,
+          focusInbound: destination.focusInbound,
           heroImage: destination.heroImage,
           description: destination.description,
+          summary: destination.summary,
           activities: destination.activities,
         }
       : emptyForm
@@ -63,8 +72,10 @@ export function DestinationForm({
     try {
       const payload = {
         ...form,
+        country: form.country || undefined,
         heroImage: form.heroImage || undefined,
         description: form.description || undefined,
+        summary: form.summary || undefined,
       };
       const url = destination
         ? `/api/admin/destinations/${destination.id}`
@@ -109,11 +120,42 @@ export function DestinationForm({
           placeholder="sri-lanka"
         />
       </div>
+      <div className="space-y-2">
+        <Label htmlFor="country">Country</Label>
+        <Input
+          id="country"
+          value={form.country ?? ""}
+          onChange={(e) => setForm((p) => ({ ...p, country: e.target.value || null }))}
+          placeholder="e.g. Sri Lanka"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="focusInbound"
+          checked={form.focusInbound}
+          onChange={(e) => setForm((p) => ({ ...p, focusInbound: e.target.checked }))}
+          className="rounded"
+        />
+        <Label htmlFor="focusInbound">Focus inbound</Label>
+      </div>
       <ImageUploadField
         label="Hero image"
         value={form.heroImage}
         onChange={(heroImage) => setForm((p) => ({ ...p, heroImage }))}
       />
+      <div className="space-y-2">
+        <Label htmlFor="summary">Summary</Label>
+        <Textarea
+          id="summary"
+          value={form.summary ?? ""}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, summary: e.target.value || null }))
+          }
+          rows={3}
+          placeholder="Short summary"
+        />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
         <Textarea

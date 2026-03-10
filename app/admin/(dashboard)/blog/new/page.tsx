@@ -1,22 +1,23 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { prisma } from "@/lib/prisma";
 import { AdminBlogForm } from "@/components/admin/AdminBlogForm";
 
 export default async function NewBlogPostPage() {
   async function save(formData: FormData) {
     "use server";
-    const supabase = createAdminClient();
-    const publishedAt = formData.get("is_published") === "on" ? new Date().toISOString() : null;
-    await supabase.from("blog_posts").insert({
-      title: formData.get("title") as string,
-      slug: formData.get("slug") as string,
-      excerpt: (formData.get("excerpt") as string) || null,
-      content: (formData.get("content") as string) || null,
-      hero_image_url: (formData.get("hero_image_url") as string) || null,
-      author_name: (formData.get("author_name") as string) || null,
-      published_at: publishedAt,
-      is_published: formData.get("is_published") === "on",
+    const isPublished = formData.get("is_published") === "on";
+    await prisma.blogPost.create({
+      data: {
+        title: formData.get("title") as string,
+        slug: formData.get("slug") as string,
+        excerpt: (formData.get("excerpt") as string) || null,
+        content: (formData.get("content") as string) || null,
+        heroImageUrl: (formData.get("hero_image_url") as string) || null,
+        authorName: (formData.get("author_name") as string) || null,
+        publishedAt: isPublished ? new Date() : null,
+        isPublished,
+      },
     });
     redirect("/admin/blog");
   }

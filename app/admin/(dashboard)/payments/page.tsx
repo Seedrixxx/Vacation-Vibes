@@ -1,9 +1,9 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { prisma } from "@/lib/prisma";
 
 export default async function AdminPaymentsPage() {
-  const supabase = createAdminClient();
-  const { data: list } = await supabase.from("deposits").select("*").order("created_at", { ascending: false });
-  const deposits = (list ?? []) as { id: string; amount: number; currency: string; status: string; customer_email: string | null; created_at: string }[];
+  const deposits = await prisma.deposit.findMany({
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <div>
@@ -20,13 +20,13 @@ export default async function AdminPaymentsPage() {
             </tr>
           </thead>
           <tbody>
-            {deposits.map((d: { id: string; amount: number; currency: string; status: string; customer_email: string | null; created_at: string }) => (
+            {deposits.map((d) => (
               <tr key={d.id} className="border-b border-charcoal/5">
-                <td className="p-4">{d.amount}</td>
+                <td className="p-4">{(d.amount / 100).toFixed(2)}</td>
                 <td className="p-4">{d.currency}</td>
                 <td className="p-4">{d.status}</td>
-                <td className="p-4 text-charcoal/70">{d.customer_email ?? "—"}</td>
-                <td className="p-4 text-charcoal/70">{new Date(d.created_at).toLocaleDateString()}</td>
+                <td className="p-4 text-charcoal/70">{d.customerEmail ?? "—"}</td>
+                <td className="p-4 text-charcoal/70">{d.createdAt.toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>

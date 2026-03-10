@@ -1,0 +1,2 @@
+{"sessionId":"a5fcca","location":"app/api/upload/cloudinary/route.ts:beforeUpload","message":"Cloudinary upload attempt","data":{"fileSize":38714,"fileType":"image/png","base64Len":51642},"timestamp":1773181309238,"hypothesisId":"H1,H4"}
+{"sessionId":"a5fcca","location":"app/api/upload/cloudinary/route.ts:catch","message":"Cloudinary upload error (500)","data":{"errMessage":"cloud_name is disabled","errKeys":["message","name","http_code"]},"timestamp":1773181312103,"hypothesisId":"H1,H2"}

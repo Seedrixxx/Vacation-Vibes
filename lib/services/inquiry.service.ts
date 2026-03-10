@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { prisma } from "@/lib/prisma";
 import { sendInquiryReceived, sendInquiryNotification } from "@/lib/email";
 import { inquirySchema } from "@/lib/validators/inquiry";
 import type { z } from "zod";
@@ -6,23 +6,18 @@ import type { z } from "zod";
 export type CreateInquiryInput = z.infer<typeof inquirySchema>;
 
 export async function createInquiry(input: CreateInquiryInput): Promise<{ id: string }> {
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("inquiries")
-    .insert({
+  const inquiry = await prisma.inquiry.create({
+    data: {
       name: input.name,
       email: input.email,
       phone: input.phone ?? null,
       message: input.message ?? null,
-      source_page: input.source_page ?? null,
-      trip_designer_payload: input.trip_designer_payload ?? null,
-    })
-    .select("id")
-    .single();
-
-  if (error) {
-    throw new Error("Failed to save inquiry");
-  }
+      sourcePage: input.source_page ?? null,
+      tripDesignerPayload: input.trip_designer_payload
+        ? (input.trip_designer_payload as object)
+        : undefined,
+    },
+  });
 
   try {
     await sendInquiryReceived(input.email, input.name);
@@ -37,5 +32,5 @@ export async function createInquiry(input: CreateInquiryInput): Promise<{ id: st
     // Don't fail the request if email fails
   }
 
-  return { id: data.id };
+  return { id: inquiry.id };
 }

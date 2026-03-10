@@ -45,9 +45,19 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ url: result.secure_url });
   } catch (err) {
-    console.error("Cloudinary upload error:", err);
+    const errMessage =
+      err instanceof Error
+        ? err.message
+        : err && typeof err === "object" && "message" in err
+          ? String((err as { message?: unknown }).message)
+          : err && typeof err === "object" && "error" in err && typeof (err as { error?: { message?: unknown } }).error?.message === "string"
+            ? (err as { error: { message: string } }).error.message
+            : typeof err === "object" && err !== null
+              ? JSON.stringify(err)
+              : String(err);
+    console.error("Cloudinary upload error:", errMessage, err);
     return NextResponse.json(
-      { error: "Upload failed" },
+      { error: errMessage || "Upload failed" },
       { status: 500 }
     );
   }
