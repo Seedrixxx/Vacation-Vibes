@@ -1,35 +1,36 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { prisma } from "@/lib/prisma";
 import { AdminBlogForm } from "@/components/admin/AdminBlogForm";
 
 export default async function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = createAdminClient();
-  const { data: post, error } = await supabase.from("blog_posts").select("*").eq("id", id).single();
-  if (error || !post) notFound();
+  const post = await prisma.blogPost.findUnique({ where: { id } });
+  if (!post) notFound();
+
+  const wasPublished = post.isPublished;
+  const currentPublishedAt = post.publishedAt;
 
   async function update(formData: FormData) {
     "use server";
-    const supabase = createAdminClient();
-    const wasPublished = post.is_published;
     const nowPublished = formData.get("is_published") === "on";
-    const publishedAt = !wasPublished && nowPublished ? new Date().toISOString() : post.published_at;
+    const publishedAt =
+      !wasPublished && nowPublished ? new Date() : currentPublishedAt;
 
-    await supabase
-      .from("blog_posts")
-      .update({
+    await prisma.blogPost.update({
+      where: { id },
+      data: {
         title: formData.get("title") as string,
         slug: formData.get("slug") as string,
         excerpt: (formData.get("excerpt") as string) || null,
         content: (formData.get("content") as string) || null,
-        hero_image_url: (formData.get("hero_image_url") as string) || null,
-        author_name: (formData.get("author_name") as string) || null,
-        published_at: publishedAt,
-        is_published: nowPublished,
-      })
-      .eq("id", id);
+        heroImageUrl: (formData.get("hero_image_url") as string) || null,
+        authorName: (formData.get("author_name") as string) || null,
+        publishedAt,
+        isPublished: nowPublished,
+      },
+    });
     redirect("/admin/blog");
   }
 
@@ -44,9 +45,9 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
           slug: post.slug,
           excerpt: post.excerpt,
           content: post.content,
-          hero_image_url: post.hero_image_url,
-          author_name: post.author_name,
-          is_published: post.is_published,
+          hero_image_url: post.heroImageUrl,
+          author_name: post.authorName,
+          is_published: post.isPublished,
         }}
       />
     </div>

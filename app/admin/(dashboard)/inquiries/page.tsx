@@ -1,9 +1,9 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { prisma } from "@/lib/prisma";
 
 export default async function AdminInquiriesPage() {
-  const supabase = createAdminClient();
-  const { data: list } = await supabase.from("inquiries").select("*").order("created_at", { ascending: false });
-  const inquiries = (list ?? []) as { id: string; name: string; email: string; source_page: string | null; created_at: string }[];
+  const inquiries = await prisma.inquiry.findMany({
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <div>
@@ -19,12 +19,12 @@ export default async function AdminInquiriesPage() {
             </tr>
           </thead>
           <tbody>
-            {inquiries.map((i: { id: string; name: string; email: string; source_page: string | null; created_at: string }) => (
+            {inquiries.map((i) => (
               <tr key={i.id} className="border-b border-charcoal/5">
                 <td className="p-4">{i.name}</td>
                 <td className="p-4">{i.email}</td>
-                <td className="p-4 text-charcoal/70">{i.source_page ?? "—"}</td>
-                <td className="p-4 text-charcoal/70">{new Date(i.created_at).toLocaleDateString()}</td>
+                <td className="p-4 text-charcoal/70">{i.sourcePage ?? "—"}</td>
+                <td className="p-4 text-charcoal/70">{i.createdAt.toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>

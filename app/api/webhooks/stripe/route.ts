@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import Stripe from "stripe";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { sendDepositConfirmation } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
@@ -89,14 +88,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
       }
     } else {
-      const supabase = createAdminClient();
-      await supabase.from("deposits").insert({
-        amount,
-        currency,
-        status: "paid",
-        stripe_session_id: session.id,
-        customer_email: customerEmail,
-        package_id: session.metadata?.package_id || null,
+      await prisma.deposit.create({
+        data: {
+          amount: Math.round(amountTotal),
+          currency,
+          status: "paid",
+          stripeSessionId: session.id,
+          customerEmail: customerEmail ?? undefined,
+          packageId: session.metadata?.package_id ?? undefined,
+        },
       });
       if (customerEmail) {
         try {

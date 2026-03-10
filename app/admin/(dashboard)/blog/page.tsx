@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { prisma } from "@/lib/prisma";
 
 export default async function AdminBlogPage() {
-  const supabase = createAdminClient();
-  const { data: list } = await supabase.from("blog_posts").select("*").order("created_at", { ascending: false });
-  const posts = (list ?? []) as { id: string; title: string; slug: string; is_published: boolean }[];
+  const posts = await prisma.blogPost.findMany({
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <div>
@@ -15,13 +15,13 @@ export default async function AdminBlogPage() {
         </Link>
       </div>
       <div className="mt-6 space-y-2">
-        {posts.map((p: { id: string; title: string; slug: string; is_published: boolean }) => (
+        {posts.map((p) => (
           <div key={p.id} className="flex items-center justify-between rounded-lg bg-white p-4 shadow-soft">
             <div>
               <Link href={`/admin/blog/${p.id}`} className="font-medium text-charcoal hover:text-teal">{p.title}</Link>
               <span className="ml-2 text-sm text-charcoal/50">{p.slug}</span>
             </div>
-            <span className="text-sm text-charcoal/60">{p.is_published ? "Published" : "Draft"}</span>
+            <span className="text-sm text-charcoal/60">{p.isPublished ? "Published" : "Draft"}</span>
           </div>
         ))}
       </div>

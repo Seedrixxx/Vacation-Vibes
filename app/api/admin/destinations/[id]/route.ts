@@ -70,8 +70,11 @@ export async function PATCH(
       data: {
         name: parsed.data.name,
         slug: parsed.data.slug,
+        country: parsed.data.country || null,
+        focusInbound: parsed.data.focusInbound ?? false,
         heroImage: parsed.data.heroImage || null,
         description: parsed.data.description || null,
+        summary: parsed.data.summary || null,
         activities: parsed.data.activities,
       },
     });

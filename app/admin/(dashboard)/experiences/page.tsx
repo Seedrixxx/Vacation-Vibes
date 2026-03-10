@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { prisma } from "@/lib/prisma";
 
 export default async function AdminExperiencesPage() {
-  const supabase = createAdminClient();
-  const { data: list } = await supabase.from("experiences").select("*, destination:destinations(name)").order("name");
-  const experiences = (list ?? []) as { id: string; name: string; slug: string; destination?: { name: string } | null }[];
+  const experiences = await prisma.experience.findMany({
+    include: { destination: { select: { name: true } } },
+    orderBy: { name: "asc" },
+  });
 
   return (
     <div>
@@ -19,7 +20,7 @@ export default async function AdminExperiencesPage() {
             </tr>
           </thead>
           <tbody>
-            {experiences.map((e: { id: string; name: string; slug: string; destination?: { name: string } | null }) => (
+            {experiences.map((e) => (
               <tr key={e.id} className="border-b border-charcoal/5">
                 <td className="p-4">{e.name}</td>
                 <td className="p-4 text-charcoal/70">{e.slug}</td>

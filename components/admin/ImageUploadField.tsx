@@ -34,9 +34,10 @@ export function ImageUploadField({
       const res = await fetch("/api/upload/cloudinary", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      if (!res.ok) throw new Error(data.error ?? `Upload failed (${res.status})`);
       onChange(data.url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
