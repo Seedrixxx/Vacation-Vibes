@@ -5,8 +5,12 @@ export function getDepositConfirmationHtml(params: {
   amount: number;
   currency: string;
   customerEmail: string;
+  trackingUrl?: string | null;
 }) {
   const amount = `${params.currency.toUpperCase()} ${params.amount.toLocaleString()}`;
+  const trackSection = params.trackingUrl
+    ? `<p><a href="${escapeHtml(params.trackingUrl)}" style="color: #0B3B3C;">Track your trip</a> to see status and itinerary.</p>`
+    : "";
   return `
 <!DOCTYPE html>
 <html>
@@ -15,6 +19,7 @@ export function getDepositConfirmationHtml(params: {
   <h1 style="color: #0B3B3C; font-size: 1.5rem;">Deposit received</h1>
   <p>Thank you for your deposit of <strong>${escapeHtml(amount)}</strong>.</p>
   <p>We'll be in touch shortly to confirm your trip details and next steps.</p>
+  ${trackSection}
   <p style="margin-top: 32px; color: #75787B; font-size: 0.875rem;">— The Vacation Vibez Team</p>
 </body>
 </html>

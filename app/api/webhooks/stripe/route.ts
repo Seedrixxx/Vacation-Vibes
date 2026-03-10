@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendDepositConfirmation } from "@/lib/email";
@@ -63,11 +64,20 @@ export async function POST(request: Request) {
         });
         if (customerEmail) {
           try {
+            const order = await prisma.tripOrder.findUnique({
+              where: { id: tripOrderId },
+              select: { trackingToken: true },
+            });
+            const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://vacationvibez.com";
+            const trackingUrl = order?.trackingToken
+              ? `${base}/track?token=${encodeURIComponent(order.trackingToken)}`
+              : null;
             await sendDepositConfirmation({
               to: customerEmail,
               amount,
               currency,
               customerEmail,
+              trackingUrl,
             });
           } catch {
             // Don't fail webhook if email fails
@@ -75,6 +85,7 @@ export async function POST(request: Request) {
         }
       } catch (err) {
         console.error("TripOrder webhook error:", err);
+        Sentry.captureException(err);
         return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
       }
     } else {

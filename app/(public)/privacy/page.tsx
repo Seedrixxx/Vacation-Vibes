@@ -1,6 +1,9 @@
 import { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 
+// Static content only; edge for fast cold start.
+export const runtime = "edge";
+
 export const metadata: Metadata = {
   title: "Privacy Policy | Vacation Vibez",
   description: "Privacy policy for Vacation Vibez.",

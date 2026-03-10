@@ -79,7 +79,8 @@ Copy `.env.example` to `.env` and fill in values.
 | `RESEND_FROM_EMAIL` | Sender (e.g. `Vacation Vibez <onboarding@resend.dev>`) | Emails |
 | **Other** | | |
 | `DEFAULT_DEPOSIT_AMOUNT` | Default deposit amount (e.g. `500`) | Payments |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | WhatsApp number (e.g. `94771234567`) | WhatsApp CTA |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | WhatsApp number (e.g. `94771234567`) | WhatsApp / live agent CTA |
+| `OPENAI_API_KEY` | OpenAI API key (e.g. `sk-...`). Get one at platform.openai.com; new accounts get free trial credits. The chatbot uses **gpt-4o-mini** (cheapest model) so credits last longer. | Itinerary chatbot (replaces floating WhatsApp with chat widget) |
 | `NEXT_PUBLIC_GA4_ID` | Google Analytics 4 ID | Analytics (optional) |
 
 Admin login is **credentials-only** (see `lib/auth.ts`): it checks `ADMIN_EMAIL` and `ADMIN_PASSWORD`; no Supabase Auth is used for admin.
@@ -131,3 +132,34 @@ To make **Build Your Trip** work for Sri Lanka inbound with pre-filled options a
 
 - **From Admin:** Go to **Trip Builder** and click **Seed Sri Lanka Defaults**. This creates/updates TripBuilderOption records (cities, durations, activities, hotel class, transport, meal plan) and three ItineraryTemplates (6N/7D, 9N/10D, 13N/14D). Safe to run multiple times (idempotent).
 - **From CLI:** `npx prisma db seed` (runs the same logic). Requires `tsx` (e.g. `npm i -D tsx`).
+
+---
+
+## Troubleshooting migrations
+
+### P3009: Failed migration in the database
+
+If you see **"migrate found failed migrations in the target database"** (e.g. migration `20260310100000_add_content_embeddings` failed):
+
+1. **Mark the migration as rolled back** so Prisma can try again:
+   ```bash
+   npx prisma migrate resolve --rolled-back 20260310100000_add_content_embeddings
+   ```
+2. **If the table was partially created**, drop it (in your DB client or `psql`):
+   ```sql
+   DROP TABLE IF EXISTS "ContentEmbedding";
+   ```
+3. **For the content-embeddings migration:** the **pgvector** extension must be available.
+   - **Hosted (Supabase, Neon, etc.):** enable the `vector` extension in the provider’s SQL/dashboard (e.g. Supabase: Database → Extensions → enable `vector`).
+   - **Local (Homebrew PostgreSQL):** install pgvector for your Postgres version, then enable it:
+     ```bash
+     brew install pgvector
+     # Restart Postgres if needed, then in psql or your DB client:
+     # CREATE EXTENSION IF NOT EXISTS vector;
+     ```
+     If you use `postgresql@15` and `brew install pgvector` doesn’t pick it up, you may need to build pgvector from source against that version or use a Postgres version that Homebrew’s pgvector supports.
+   Then run:
+   ```bash
+   npx prisma migrate deploy
+   ```
+   (or `npx prisma migrate dev` for development.)

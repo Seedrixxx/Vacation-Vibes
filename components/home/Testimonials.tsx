@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -39,12 +40,13 @@ function TestimonialCard({
           &ldquo;{testimonial.quote}&rdquo;
         </blockquote>
         <div className="mt-6 flex items-center gap-3">
-          <div className="h-12 w-12 overflow-hidden rounded-full bg-sand">
-            <img
+          <div className="relative h-12 w-12 overflow-hidden rounded-full bg-sand">
+            <Image
               src={testimonial.avatar}
               alt=""
-              className="h-full w-full object-cover"
-              loading="lazy"
+              fill
+              className="object-cover"
+              sizes="48px"
             />
           </div>
           <div>

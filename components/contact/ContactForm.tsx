@@ -31,46 +31,55 @@ export function ContactForm({ className }: { className?: string }) {
     }
   }
 
+  const inputClass =
+    "w-full border-0 border-b border-charcoal/20 bg-transparent px-0 py-3 text-charcoal placeholder:text-charcoal/40 focus:border-charcoal/50 focus:outline-none focus:ring-0 transition-colors";
+
   return (
     <form onSubmit={submit} className={className} noValidate>
       <label className="block">
-        <span className="text-sm font-medium text-charcoal">Name *</span>
         <input
           type="text"
           name="name"
           required
-          className="mt-1 w-full rounded-lg border border-charcoal/20 bg-white px-4 py-2 text-charcoal"
+          placeholder="Name"
+          className={inputClass}
         />
       </label>
-      <label className="mt-4 block">
-        <span className="text-sm font-medium text-charcoal">Email *</span>
+      <label className="block mt-6">
         <input
           type="email"
           name="email"
           required
-          className="mt-1 w-full rounded-lg border border-charcoal/20 bg-white px-4 py-2 text-charcoal"
+          placeholder="Email"
+          className={inputClass}
         />
       </label>
-      <label className="mt-4 block">
-        <span className="text-sm font-medium text-charcoal">Phone</span>
+      <label className="block mt-6">
         <input
           type="tel"
           name="phone"
-          className="mt-1 w-full rounded-lg border border-charcoal/20 bg-white px-4 py-2 text-charcoal"
+          placeholder="Phone"
+          className={inputClass}
         />
       </label>
-      <label className="mt-4 block">
-        <span className="text-sm font-medium text-charcoal">Message</span>
+      <label className="block mt-6">
         <textarea
           name="message"
-          rows={4}
-          className="mt-1 w-full rounded-lg border border-charcoal/20 bg-white px-4 py-2 text-charcoal"
+          rows={3}
+          placeholder="Message"
+          className={`${inputClass} resize-none`}
         />
       </label>
-      {status === "done" && <p className="mt-4 text-teal">Thank you. We’ll be in touch soon.</p>}
-      {status === "error" && <p className="mt-4 text-red-600">Something went wrong. Please try again or WhatsApp us.</p>}
-      <Button type="submit" className="mt-6" disabled={status === "sending"}>
-        {status === "sending" ? "Sending…" : "Send inquiry"}
+      {status === "done" && (
+        <p className="mt-6 text-sm text-charcoal/60">Thank you. We’ll be in touch soon.</p>
+      )}
+      {status === "error" && (
+        <p className="mt-6 text-sm text-red-600">
+          Something went wrong. Please try again or WhatsApp us.
+        </p>
+      )}
+      <Button type="submit" variant="outline" className="mt-8 min-w-[140px]" disabled={status === "sending"}>
+        {status === "sending" ? "Sending…" : "Send"}
       </Button>
     </form>
   );

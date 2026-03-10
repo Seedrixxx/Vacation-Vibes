@@ -1,7 +1,8 @@
 import { Navbar } from "@/components/home/Navbar";
 import { Footer } from "@/components/home/Footer";
-import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { ScrollProgress } from "@/components/motion/ScrollProgress";
+import { MainWithNavbarSpace } from "@/components/layout/MainWithNavbarSpace";
 
 export default function PublicLayout({
   children,
@@ -12,9 +13,11 @@ export default function PublicLayout({
     <>
       <ScrollProgress />
       <Navbar />
-      <main id="main-content">{children}</main>
+      <MainWithNavbarSpace id="main-content">
+        <div className="flex-1">{children}</div>
+      </MainWithNavbarSpace>
       <Footer />
-      <WhatsAppButton />
+      <ChatWidget />
     </>
   );
 }

@@ -1,0 +1,43 @@
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094600378,"message":"chat POST","data":{"hasApiKey":false,"messageLen":5},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094600380,"message":"chat 503 no key","data":{},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"ChatWidget.tsx:fetch","message":"chat response","data":{"status":503,"ok":false},"timestamp":1773094600383,"hypothesisId":"A,B,C,D"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094600378,"message":"chat POST","data":{"hasApiKey":false,"messageLen":5},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094600380,"message":"chat 503 no key","data":{},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"ChatWidget.tsx:afterJson","message":"chat data","data":{"hasReply":false,"hasError":true},"timestamp":1773094600383,"hypothesisId":"E"}
+{"sessionId":"63efed","location":"ChatWidget.tsx:catch","message":"chat widget catch","data":{"error":"Chat is not configured"},"timestamp":1773094600383,"hypothesisId":"D,E"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094782201,"message":"chat POST","data":{"hasApiKey":true,"messageLen":2},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094782202,"message":"before buildChatContext","data":{},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094782201,"message":"chat POST","data":{"hasApiKey":true,"messageLen":2},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094782203,"message":"before buildChatContext","data":{},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094782314,"message":"after buildChatContext","data":{"contextLen":9285},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094782315,"message":"before OpenAI create","data":{},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094782314,"message":"after buildChatContext","data":{"contextLen":9285},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094782315,"message":"before OpenAI create","data":{},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094784113,"message":"after OpenAI create","data":{"hasChoice":true},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094784113,"message":"after OpenAI create","data":{"hasChoice":true},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"ChatWidget.tsx:fetch","message":"chat response","data":{"status":200,"ok":true},"timestamp":1773094784117,"hypothesisId":"A,B,C,D"}
+{"sessionId":"63efed","location":"ChatWidget.tsx:afterJson","message":"chat data","data":{"hasReply":true,"hasError":false},"timestamp":1773094784118,"hypothesisId":"E"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094804008,"message":"chat POST","data":{"hasApiKey":true,"messageLen":38},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094804009,"message":"before buildChatContext","data":{},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094804009,"message":"chat POST","data":{"hasApiKey":true,"messageLen":38},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094804010,"message":"before buildChatContext","data":{},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094804021,"message":"after buildChatContext","data":{"contextLen":9285},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094804022,"message":"before OpenAI create","data":{},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094804021,"message":"after buildChatContext","data":{"contextLen":9285},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094804022,"message":"before OpenAI create","data":{},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094809382,"message":"after OpenAI create","data":{"hasChoice":true},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094809383,"message":"after OpenAI create","data":{"hasChoice":true},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"ChatWidget.tsx:fetch","message":"chat response","data":{"status":200,"ok":true},"timestamp":1773094809389,"hypothesisId":"A,B,C,D"}
+{"sessionId":"63efed","location":"ChatWidget.tsx:afterJson","message":"chat data","data":{"hasReply":true,"hasError":false},"timestamp":1773094809390,"hypothesisId":"E"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094839380,"message":"chat POST","data":{"hasApiKey":true,"messageLen":41},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094839381,"message":"before buildChatContext","data":{},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094839380,"message":"chat POST","data":{"hasApiKey":true,"messageLen":41},"hypothesisId":"A"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094839381,"message":"before buildChatContext","data":{},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094839390,"message":"after buildChatContext","data":{"contextLen":9285},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094839390,"message":"before OpenAI create","data":{},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094839390,"message":"after buildChatContext","data":{"contextLen":9285},"hypothesisId":"B"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094839390,"message":"before OpenAI create","data":{},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094842223,"message":"after OpenAI create","data":{"hasChoice":true},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"app/api/chat/route.ts","timestamp":1773094842223,"message":"after OpenAI create","data":{"hasChoice":true},"hypothesisId":"C"}
+{"sessionId":"63efed","location":"ChatWidget.tsx:fetch","message":"chat response","data":{"status":200,"ok":true},"timestamp":1773094842225,"hypothesisId":"A,B,C,D"}
+{"sessionId":"63efed","location":"ChatWidget.tsx:afterJson","message":"chat data","data":{"hasReply":true,"hasError":false},"timestamp":1773094842226,"hypothesisId":"E"}

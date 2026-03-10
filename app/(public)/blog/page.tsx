@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getBlogPosts } from "@/lib/data/public";
 import { Container } from "@/components/ui/Container";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Blog | Vacation Vibez",
   description: "Travel tips, destination guides, and stories from Sri Lanka and beyond.",

@@ -110,8 +110,7 @@ export function HeroVideo() {
     <section aria-label="Hero section" className="relative w-full">
       <div
         ref={containerRef}
-        className="relative flex w-full items-center justify-center overflow-hidden bg-charcoal"
-        style={{ aspectRatio: "16/9" }}
+        className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-charcoal"
       >
         {/* Video or fallback */}
         {!videoError ? (
@@ -121,6 +120,7 @@ export function HeroVideo() {
             muted={isMuted}
             loop
             playsInline
+            preload="auto"
             onError={() => setVideoError(true)}
             onLoadedData={ensurePlaying}
             onCanPlay={ensurePlaying}

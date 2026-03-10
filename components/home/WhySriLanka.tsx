@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { useRef, useState } from "react";
 import { Container } from "@/components/ui/Container";
@@ -83,29 +84,31 @@ export function WhySriLanka() {
                 className="space-y-4"
               >
                 <div
-                  className={`aspect-[3/4] overflow-hidden rounded-2xl bg-teal/10 transition-all duration-300 ${hoveredFeature === "temple" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
+                  className={`relative aspect-[3/4] overflow-hidden rounded-2xl bg-teal/10 transition-all duration-300 ${hoveredFeature === "temple" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
                   onMouseEnter={() => setHoveredFeature("temple")}
                   onMouseLeave={() => setHoveredFeature(null)}
                   role="presentation"
                 >
-                  <img
+                  <Image
                     src="/images/collage/sigiriya.jpg"
                     alt="Sigiriya Rock Fortress"
-                    className="h-full w-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
                 <div
-                  className={`aspect-square overflow-hidden rounded-2xl bg-gold/10 transition-all duration-300 ${hoveredFeature === "train" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
+                  className={`relative aspect-square overflow-hidden rounded-2xl bg-gold/10 transition-all duration-300 ${hoveredFeature === "train" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
                   onMouseEnter={() => setHoveredFeature("train")}
                   onMouseLeave={() => setHoveredFeature(null)}
                   role="presentation"
                 >
-                  <img
+                  <Image
                     src="/images/collage/tea.jpg"
                     alt="Ceylon tea plantations"
-                    className="h-full w-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
               </motion.div>
@@ -117,29 +120,31 @@ export function WhySriLanka() {
                 className="mt-8 space-y-4"
               >
                 <div
-                  className={`aspect-square overflow-hidden rounded-2xl bg-sand-400/50 transition-all duration-300 ${hoveredFeature === "beach" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
+                  className={`relative aspect-square overflow-hidden rounded-2xl bg-sand-400/50 transition-all duration-300 ${hoveredFeature === "beach" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
                   onMouseEnter={() => setHoveredFeature("beach")}
                   onMouseLeave={() => setHoveredFeature(null)}
                   role="presentation"
                 >
-                  <img
+                  <Image
                     src="/images/collage/beach.jpg"
                     alt="Sri Lanka beaches"
-                    className="h-full w-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
                 <div
-                  className={`aspect-[3/4] overflow-hidden rounded-2xl bg-teal/10 transition-all duration-300 ${hoveredFeature === "wildlife" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
+                  className={`relative aspect-[3/4] overflow-hidden rounded-2xl bg-teal/10 transition-all duration-300 ${hoveredFeature === "wildlife" ? "ring-2 ring-gold ring-offset-2 scale-[1.02]" : ""}`}
                   onMouseEnter={() => setHoveredFeature("wildlife")}
                   onMouseLeave={() => setHoveredFeature(null)}
                   role="presentation"
                 >
-                  <img
+                  <Image
                     src="/images/collage/elephant.jpg"
                     alt="Sri Lanka elephants"
-                    className="h-full w-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
               </motion.div>

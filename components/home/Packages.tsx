@@ -8,7 +8,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { sriLankaPackages } from "@/lib/homeData";
-import type { Package as DbPackage } from "@/lib/supabase/types";
+import type { PublicPackage } from "@/lib/types/package";
 
 type PackageCard = {
   id: string;
@@ -23,7 +23,7 @@ type PackageCard = {
   deposit_amount?: number;
 };
 
-function normalizePackages(db: DbPackage[]): PackageCard[] {
+function normalizePackages(db: PublicPackage[]): PackageCard[] {
   return db.map((p) => ({
     id: p.id,
     title: p.title,
@@ -38,7 +38,7 @@ function normalizePackages(db: DbPackage[]): PackageCard[] {
   }));
 }
 
-export function Packages({ packages: dbPackages }: { packages?: DbPackage[] }) {
+export function Packages({ packages: dbPackages }: { packages?: PublicPackage[] }) {
   const cards: PackageCard[] = dbPackages?.length
     ? normalizePackages(dbPackages)
     : sriLankaPackages.map((p) => ({

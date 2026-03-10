@@ -1,5 +1,9 @@
+import type { Destination, Experience, BlogPost, ItineraryDay } from "@/lib/supabase/types";
+import type { PublicPackage } from "@/lib/types/package";
 import { createClient } from "@/lib/supabase/server";
-import type { Destination, Experience, Package, BlogPost, ItineraryDay } from "@/lib/supabase/types";
+import * as packageRepository from "@/lib/repositories/package.repository";
+import * as destinationRepository from "@/lib/repositories/destination.repository";
+import * as experienceRepository from "@/lib/repositories/experience.repository";
 
 export const TAGS = {
   destinations: "destinations",
@@ -10,65 +14,39 @@ export const TAGS = {
 } as const;
 
 export async function getDestinations(): Promise<Destination[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("destinations")
-    .select("*")
-    .order("focus_inbound", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function getExperiences(destinationId?: string): Promise<Experience[]> {
   try {
-    const supabase = await createClient();
-    let q = supabase.from("experiences").select("*").order("name");
-    if (destinationId) q = q.eq("destination_id", destinationId);
-    const { data, error } = await q;
-    if (error) return [];
-    return data ?? [];
+    return await destinationRepository.getDestinations();
   } catch {
     return [];
   }
 }
 
+export async function getExperiences(destinationId?: string): Promise<Experience[]> {
+  return experienceRepository.getExperiences(destinationId);
+}
+
+/**
+ * Fetch packages from Prisma (single source of truth). Returns PublicPackage DTO.
+ */
 export async function getPackages(options?: {
   featured?: boolean;
   destinationSlug?: string;
   destinationId?: string;
   limit?: number;
-}): Promise<Package[]> {
-  const supabase = await createClient();
-  let q = supabase
-    .from("packages")
-    .select("*, destination:destinations(*)")
-    .eq("is_published", true)
-    .order("is_featured", { ascending: false });
-  if (options?.featured) q = q.eq("is_featured", true);
-  if (options?.destinationId) q = q.eq("destination_id", options.destinationId);
-  if (options?.destinationSlug) {
-    const dest = await getDestinationBySlug(options.destinationSlug);
-    if (dest) q = q.eq("destination_id", dest.id);
-  }
-  if (options?.limit) q = q.limit(options.limit);
-  const { data, error } = await q;
-  if (error) throw error;
-  return data ?? [];
+  tripType?: "INBOUND" | "OUTBOUND";
+}): Promise<PublicPackage[]> {
+  return packageRepository.getPackages({
+    featured: options?.featured,
+    tripType: options?.tripType,
+    limit: options?.limit,
+  });
 }
 
-export async function getPackageBySlug(slug: string): Promise<Package | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("packages")
-    .select("*, destination:destinations(*)")
-    .eq("slug", slug)
-    .eq("is_published", true)
-    .single();
-  if (error) {
-    if (error.code === "PGRST116") return null;
-    throw error;
-  }
-  return data;
+/**
+ * Fetch a single package by slug from Prisma. Returns PublicPackage or null.
+ */
+export async function getPackageBySlug(slug: string): Promise<PublicPackage | null> {
+  return packageRepository.getPackageBySlug(slug);
 }
 
 export async function getItineraryDays(packageId: string): Promise<ItineraryDay[]> {
@@ -111,15 +89,9 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 }
 
 export async function getDestinationBySlug(slug: string): Promise<Destination | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("destinations")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-  if (error) {
-    if (error.code === "PGRST116") return null;
-    throw error;
+  try {
+    return await destinationRepository.getDestinationBySlug(slug);
+  } catch {
+    return null;
   }
-  return data;
 }

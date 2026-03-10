@@ -7,15 +7,13 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { getWhatsAppLink } from "@/lib/config/nav";
 
-const STORAGE_KEY = "vacation_vibes_blueprint";
-const TRIP_ORDER_STORAGE_PREFIX = "vacation_vibes_trip_order_";
-
-type StoredTripOrder = {
+/** Trip order data from GET /api/trip-orders/[invoice] (public-safe, no PII). Result data is never read from sessionStorage. */
+type TripOrderResult = {
   invoiceNumber: string;
-  tripOrderId: string;
   itineraryJson: { days?: Array<{ dayNumber?: number; from?: string; to?: string; title?: string; description?: string }> };
   pricingJson: { total?: number; deposit?: number; currency?: string; items?: Array<{ label: string; amount: number }> };
   handoffMode: string;
+  trackingToken?: string | null;
 };
 
 export type Blueprint = {
@@ -35,7 +33,9 @@ export type Blueprint = {
 export function TripBlueprintResult() {
   const searchParams = useSearchParams();
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
-  const [tripOrder, setTripOrder] = useState<StoredTripOrder | null>(null);
+  const [tripOrder, setTripOrder] = useState<TripOrderResult | null>(null);
+  const [tripOrderNotFound, setTripOrderNotFound] = useState(false);
+  const [tripOrderLoading, setTripOrderLoading] = useState(true);
   const [contactSent, setContactSent] = useState(false);
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
@@ -44,38 +44,27 @@ export function TripBlueprintResult() {
   useEffect(() => {
     const invoice = searchParams.get("invoice");
     if (invoice) {
-      try {
-        const raw = sessionStorage.getItem(TRIP_ORDER_STORAGE_PREFIX + invoice);
-        if (raw) {
-          const parsed = JSON.parse(raw) as StoredTripOrder;
-          if (parsed.invoiceNumber === invoice) {
-            setTripOrder(parsed);
-            return;
+      setTripOrderLoading(true);
+      setTripOrderNotFound(false);
+      fetch(`/api/trip-orders/${encodeURIComponent(invoice)}`)
+        .then((res) => {
+          if (!res.ok) {
+            if (res.status === 404) setTripOrderNotFound(true);
+            return null;
           }
-        }
-      } catch {
-        // ignore
-      }
-      setTripOrder({ invoiceNumber: invoice, tripOrderId: "", itineraryJson: {}, pricingJson: {}, handoffMode: "AGENT" });
+          return res.json() as Promise<TripOrderResult>;
+        })
+        .then((data) => {
+          if (data && data.invoiceNumber === invoice) {
+            setTripOrder(data);
+          }
+        })
+        .catch(() => setTripOrderNotFound(true))
+        .finally(() => setTripOrderLoading(false));
       return;
     }
 
-    const blueprintId = searchParams.get("blueprint_id");
-    if (blueprintId) {
-      try {
-        const raw = sessionStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as Blueprint;
-          if (parsed.blueprint_id === blueprintId || parsed.blueprint_id == null) {
-            setBlueprint(parsed);
-            return;
-          }
-        }
-      } catch {
-        // ignore
-      }
-    }
-
+    setTripOrderLoading(false);
     const route = searchParams.get("route_outline");
     if (route) {
       setBlueprint({
@@ -172,6 +161,33 @@ export function TripBlueprintResult() {
     }
   };
 
+  if (searchParams.get("invoice") && tripOrderLoading) {
+    return (
+      <Container className="max-w-2xl py-12">
+        <p className="text-charcoal/70">Loading your trip request…</p>
+      </Container>
+    );
+  }
+
+  if (searchParams.get("invoice") && tripOrderNotFound) {
+    return (
+      <Container className="max-w-2xl py-12">
+        <h1 className="font-serif text-2xl font-semibold text-charcoal">Order not found</h1>
+        <p className="mt-2 text-charcoal/70">
+          This link may have expired or the invoice number is incorrect. Please contact us or create a new trip.
+        </p>
+        <div className="mt-6 flex gap-4">
+          <Button as="a" href={getWhatsAppLink()} target="_blank" rel="noopener noreferrer">
+            Contact us on WhatsApp
+          </Button>
+          <Button as="a" href="/build-your-trip" variant="outline">
+            Build your trip again
+          </Button>
+        </div>
+      </Container>
+    );
+  }
+
   if (tripOrder && tripOrder.invoiceNumber) {
     const itinerary = tripOrder.itineraryJson?.days ?? [];
     const pricing = tripOrder.pricingJson;
@@ -240,7 +256,11 @@ export function TripBlueprintResult() {
           <Button as="a" href={whatsAppUrl} target="_blank" rel="noopener noreferrer" variant={isCheckout ? "outline" : "primary"}>
             WhatsApp us
           </Button>
-          <Button as="a" href="/track" variant="outline">
+          <Button
+            as="a"
+            href={tripOrder.trackingToken ? `/track?token=${encodeURIComponent(tripOrder.trackingToken)}` : "/track"}
+            variant="outline"
+          >
             Track your trip
           </Button>
         </div>

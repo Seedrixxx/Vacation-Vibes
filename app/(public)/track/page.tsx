@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function TrackPage() {
-  const [invoice, setInvoice] = useState("");
-  const [email, setEmail] = useState("");
+function TrackPageContent() {
+  const searchParams = useSearchParams();
+  const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<{
@@ -25,15 +26,33 @@ export default function TrackPage() {
     amountPaid: number | null;
   } | null>(null);
 
+  // Prefill token from URL ?token=XXX
+  useEffect(() => {
+    const q = searchParams.get("token");
+    if (q) setToken(q);
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setData(null);
+    let value = token.trim();
+    // If user pasted URL with token=, extract it
+    if (value.includes("token=")) {
+      try {
+        const query = value.includes("?") ? value.split("?")[1] ?? "" : value;
+        value = new URLSearchParams(query).get("token") ?? value;
+      } catch {
+        // use as-is
+      }
+    }
+    if (!value) {
+      setError("Please enter your tracking link or token.");
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/track?invoice=${encodeURIComponent(invoice.trim())}&email=${encodeURIComponent(email.trim())}`
-      );
+      const res = await fetch(`/api/track?token=${encodeURIComponent(value)}`);
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(json.error ?? "Failed to load trip");
@@ -52,30 +71,17 @@ export default function TrackPage() {
           Track your trip
         </h1>
         <p className="mt-2 text-charcoal/70">
-          Enter your invoice number and email to see status and itinerary.
+          Use the link we sent you by email, or paste your tracking token below.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <div>
-            <Label htmlFor="invoice">Invoice number</Label>
+            <Label htmlFor="token">Tracking link or token</Label>
             <Input
-              id="invoice"
-              value={invoice}
-              onChange={(e) => setInvoice(e.target.value)}
-              placeholder="e.g. VV-202603-000001"
-              required
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
+              id="token"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Paste link from email or your tracking token"
               className="mt-1"
             />
           </div>
@@ -162,5 +168,19 @@ export default function TrackPage() {
         )}
       </Container>
     </div>
+  );
+}
+
+export default function TrackPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-sand py-16 lg:py-24">
+        <Container className="max-w-lg">
+          <p className="text-charcoal/70">Loading…</p>
+        </Container>
+      </div>
+    }>
+      <TrackPageContent />
+    </Suspense>
   );
 }

@@ -8,9 +8,8 @@ export function organizationJsonLd() {
     url: BASE,
     description: "Sri Lanka travel experts. Luxury escapes, cultural journeys, and tailor-made adventures.",
     sameAs: [
-      "https://www.instagram.com/vacationvibez",
-      "https://www.facebook.com/vacationvibez",
-      "https://twitter.com/vacationvibez",
+      "https://www.instagram.com/vacation_vibes_co",
+      "https://www.facebook.com/profile.php?id=61572665224875",
     ],
   };
 }

@@ -38,6 +38,7 @@ export async function sendDepositConfirmation(params: {
   amount: number;
   currency: string;
   customerEmail: string;
+  trackingUrl?: string | null;
 }) {
   if (!resend) return;
   await resend.emails.send({
@@ -48,6 +49,7 @@ export async function sendDepositConfirmation(params: {
       amount: params.amount,
       currency: params.currency,
       customerEmail: params.customerEmail,
+      trackingUrl: params.trackingUrl,
     }),
   });
 }

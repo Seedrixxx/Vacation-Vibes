@@ -352,9 +352,8 @@ export const footerContact = {
   uae: "+971 56 443 8965",
 };
 
+/** Official social pages — Facebook & Instagram */
 export const socialLinks = [
-  { name: "Instagram", href: "#", icon: "instagram" },
-  { name: "Facebook", href: "#", icon: "facebook" },
-  { name: "Twitter", href: "#", icon: "twitter" },
-  { name: "YouTube", href: "#", icon: "youtube" },
+  { name: "Instagram", href: "https://www.instagram.com/vacation_vibes_co", icon: "instagram" },
+  { name: "Facebook", href: "https://www.facebook.com/profile.php?id=61572665224875", icon: "facebook" },
 ];

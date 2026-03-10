@@ -6,6 +6,7 @@ export const mainNav = [
   { label: "About", href: "/about" },
   { label: "Contact us", href: "/contact" },
   { label: "Track your Trip", href: "/track" },
+  { label: "Search", href: "/search" },
 ] as const;
 
 export const adminLoginHref = "/admin/login";

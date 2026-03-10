@@ -1,4 +1,4 @@
-import type { Package } from "@/lib/supabase/types";
+import type { PublicPackage } from "@/lib/types/package";
 import type { Experience } from "@/lib/supabase/types";
 
 export interface TripDesignerInput {
@@ -13,7 +13,7 @@ export interface TripDesignerInput {
  * Deterministic scoring: higher = better match.
  * Weights: duration (40), travel_type (30), budget_tier (20), featured (10).
  */
-export function scorePackage(pkg: Package, input: TripDesignerInput): number {
+export function scorePackage(pkg: PublicPackage, input: TripDesignerInput): number {
   let score = 0;
 
   const durationDiff = Math.abs(pkg.duration_days - input.duration_days);
@@ -30,9 +30,9 @@ export function scorePackage(pkg: Package, input: TripDesignerInput): number {
 }
 
 export function sortPackagesByScore(
-  packages: Package[],
+  packages: PublicPackage[],
   input: TripDesignerInput
-): Package[] {
+): PublicPackage[] {
   return [...packages]
     .map((pkg) => ({ pkg, score: scorePackage(pkg, input) }))
     .sort((a, b) => b.score - a.score)

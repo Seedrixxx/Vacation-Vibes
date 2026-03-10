@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import clsx from "clsx";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +11,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import type { Experience } from "@/lib/supabase/types";
+
+const STEP_EASE = [0.25, 0.1, 0.25, 1] as const;
+const STEP_DURATION = 0.35;
+const STAGGER_ITEM = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
 
 const TRAVEL_TYPES = [
   { value: "cultural", label: "Cultural & heritage" },
@@ -29,15 +42,19 @@ const BUDGET_TIERS = [
   { value: "luxury", label: "Luxury" },
 ];
 
-const TRIP_ORDER_STORAGE_PREFIX = "vacation_vibes_trip_order_";
-
 export function TripDesignerWizard({ experiences = [] }: { experiences?: Experience[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const reduceMotion = useReducedMotion();
   const [step, setStep] = useState(1);
+  const [stepDirection, setStepDirection] = useState(0);
   const [travelType, setTravelType] = useState(searchParams.get("travel_type") ?? "");
   const [duration, setDuration] = useState<number>(Number(searchParams.get("duration")) || 7);
-  const [interestSlugs, setInterestSlugs] = useState<string[]>([]);
+  const [interestSlugs, setInterestSlugs] = useState<string[]>(() => {
+    const exp = searchParams.get("experience");
+    if (!exp) return [];
+    return experiences.some((e) => e.slug === exp) ? [exp] : [];
+  });
   const [budgetTier, setBudgetTier] = useState(searchParams.get("budget") ?? "mid");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,6 +63,11 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
   const [submitting, setSubmitting] = useState(false);
 
   const totalSteps = 5;
+
+  const goToStep = (next: number) => {
+    setStepDirection(next > step ? 1 : -1);
+    setStep(next);
+  };
 
   const toggleInterest = (slug: string) => {
     setInterestSlugs((prev) =>
@@ -85,20 +107,6 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to create trip order");
       toast.success("Trip request created!");
-      try {
-        sessionStorage.setItem(
-          TRIP_ORDER_STORAGE_PREFIX + data.invoiceNumber,
-          JSON.stringify({
-            invoiceNumber: data.invoiceNumber,
-            tripOrderId: data.tripOrderId,
-            itineraryJson: data.itineraryJson ?? {},
-            pricingJson: data.pricingJson ?? {},
-            handoffMode: data.handoffMode ?? "AGENT",
-          })
-        );
-      } catch {
-        // ignore
-      }
       router.push(`/build-your-trip/result?invoice=${encodeURIComponent(data.invoiceNumber)}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to submit");
@@ -107,195 +115,269 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
     }
   };
 
+  const stepVariants = {
+    enter: (d: number) =>
+      reduceMotion ? { opacity: 1 } : { opacity: 0, x: d > 0 ? 48 : -48 },
+    center: { opacity: 1, x: 0 },
+    exit: (d: number) =>
+      reduceMotion ? { opacity: 0 } : { opacity: 0, x: d > 0 ? -48 : 48 },
+  };
+
   return (
     <Container className="max-w-2xl">
-      <h1 className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">
-        Trip Designer
-      </h1>
-      <p className="mt-2 text-charcoal/70">
-        Tell us your style and we’ll suggest a route and experiences.
-      </p>
-      <p className="mt-1 text-sm text-charcoal/60">
-        Step {step} of {totalSteps}
-      </p>
-
-      {step === 1 && (
-        <div className="mt-8">
-          <h2 className="font-medium text-charcoal">Travel type</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {TRAVEL_TYPES.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => setTravelType(t.value)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  travelType === t.value
-                    ? "bg-teal text-white"
-                    : "bg-white text-charcoal shadow-soft hover:bg-charcoal/5"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <div className="mt-8 flex justify-end">
-            <Button onClick={() => setStep(2)} disabled={!travelType}>
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="mt-8">
-          <h2 className="font-medium text-charcoal">Duration</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {DURATIONS.map((d) => (
-              <button
-                key={d.value}
-                type="button"
-                onClick={() => setDuration(d.value)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  duration === d.value
-                    ? "bg-teal text-white"
-                    : "bg-white text-charcoal shadow-soft hover:bg-charcoal/5"
-                }`}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
-          <div className="mt-8 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(1)}>
-              Back
-            </Button>
-            <Button onClick={() => setStep(3)}>Next</Button>
-          </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="mt-8">
-          <h2 className="font-medium text-charcoal">Interests (optional)</h2>
-          <p className="mt-1 text-sm text-charcoal/70">
-            Pick experiences you’d like included. We’ll prioritize these in your blueprint.
+      <div className="overflow-hidden rounded-2xl bg-white/95 px-6 py-8 shadow-soft backdrop-blur-sm sm:px-8 sm:py-10">
+        <h1 className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">
+          Trip Designer
+        </h1>
+        <p className="mt-2 text-charcoal/70">
+          Tell us your style and we’ll suggest a route and experiences.
+        </p>
+        {(searchParams.get("package") || searchParams.get("destination") || searchParams.get("experience")) && (
+          <p className="mt-1 text-sm text-teal/90">
+            You’re building from a selection — we’ll tailor your blueprint accordingly.
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {experiences.map((e) => (
-              <button
-                key={e.id}
-                type="button"
-                onClick={() => toggleInterest(e.slug)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  interestSlugs.includes(e.slug)
-                    ? "bg-teal text-white"
-                    : "bg-white text-charcoal shadow-soft hover:bg-charcoal/5"
-                }`}
-              >
-                {e.name}
-              </button>
-            ))}
-          </div>
-          <div className="mt-8 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(2)}>
-              Back
-            </Button>
-            <Button onClick={() => setStep(4)}>Next</Button>
-          </div>
-        </div>
-      )}
+        )}
 
-      {step === 4 && (
-        <div className="mt-8">
-          <h2 className="font-medium text-charcoal">Budget</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {BUDGET_TIERS.map((b) => (
-              <button
-                key={b.value}
-                type="button"
-                onClick={() => setBudgetTier(b.value)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  budgetTier === b.value
-                    ? "bg-teal text-white"
-                    : "bg-white text-charcoal shadow-soft hover:bg-charcoal/5"
-                }`}
-              >
-                {b.label}
-              </button>
-            ))}
+        {/* Progress bar */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-sm text-charcoal/60">
+            <span>Step {step} of {totalSteps}</span>
           </div>
-          <div className="mt-8 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(3)}>
-              Back
-            </Button>
-            <Button onClick={() => setStep(5)}>Next</Button>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-charcoal/10">
+            <motion.div
+              className="h-full rounded-full bg-teal"
+              animate={{ width: `${(step / totalSteps) * 100}%` }}
+              transition={{
+                duration: reduceMotion ? 0 : STEP_DURATION,
+                ease: STEP_EASE,
+              }}
+            />
           </div>
         </div>
-      )}
 
-      {step === 5 && (
-        <div className="mt-8 space-y-4">
-          <h2 className="font-medium text-charcoal">Contact & Submit</h2>
-          <p className="text-sm text-charcoal/70">
-            Share your details so we can send your Trip Blueprint and follow up.
-          </p>
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Full name *</Label>
-            <Input
-              id="fullName"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              placeholder="Jane Doe"
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="jane@example.com"
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="whatsapp">WhatsApp (optional)</Label>
-            <Input
-              id="whatsapp"
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
-              placeholder="+1 234 567 8900"
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="message">Message (optional)</Label>
-            <Textarea
-              id="message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Any special requests or dates?"
-              rows={3}
-              className="w-full"
-            />
-          </div>
-          <div className="mt-8 flex justify-between">
-            <Button variant="outline" onClick={() => setStep(4)}>
-              Back
-            </Button>
-            <Button
-              onClick={handleSubmitContact}
-              disabled={submitting || !fullName.trim() || !email.trim()}
-            >
-              {submitting ? "Submitting…" : "Get my Trip Blueprint"}
-            </Button>
-          </div>
-        </div>
-      )}
+        <AnimatePresence mode="wait" custom={stepDirection}>
+          <motion.div
+            key={step}
+            custom={stepDirection}
+            variants={stepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: reduceMotion ? 0 : STEP_DURATION, ease: STEP_EASE }}
+            className="mt-8"
+          >
+            {step === 1 && (
+              <>
+                <h2 className="font-medium text-charcoal">Travel type</h2>
+                <motion.div
+                  className="mt-3 flex flex-wrap gap-2"
+                  variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {TRAVEL_TYPES.map((t) => (
+                    <OptionChip
+                      key={t.value}
+                      label={t.label}
+                      selected={travelType === t.value}
+                      onSelect={() => setTravelType(t.value)}
+                      reduceMotion={!!reduceMotion}
+                    />
+                  ))}
+                </motion.div>
+                <div className="mt-8 flex justify-end">
+                  <Button onClick={() => goToStep(2)} disabled={!travelType}>
+                    Next
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <h2 className="font-medium text-charcoal">Duration</h2>
+                <motion.div
+                  className="mt-3 flex flex-wrap gap-2"
+                  variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {DURATIONS.map((d) => (
+                    <OptionChip
+                      key={d.value}
+                      label={d.label}
+                      selected={duration === d.value}
+                      onSelect={() => setDuration(d.value)}
+                      reduceMotion={!!reduceMotion}
+                    />
+                  ))}
+                </motion.div>
+                <div className="mt-8 flex justify-between">
+                  <Button variant="outline" onClick={() => goToStep(1)}>
+                    Back
+                  </Button>
+                  <Button onClick={() => goToStep(3)}>Next</Button>
+                </div>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <h2 className="font-medium text-charcoal">Interests (optional)</h2>
+                <p className="mt-1 text-sm text-charcoal/70">
+                  Pick experiences you’d like included. We’ll prioritize these in your blueprint.
+                </p>
+                <motion.div
+                  className="mt-3 flex flex-wrap gap-2"
+                  variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.04 } } }}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {experiences.map((e) => (
+                    <OptionChip
+                      key={e.id}
+                      label={e.name}
+                      selected={interestSlugs.includes(e.slug)}
+                      onSelect={() => toggleInterest(e.slug)}
+                      reduceMotion={!!reduceMotion}
+                    />
+                  ))}
+                </motion.div>
+                <div className="mt-8 flex justify-between">
+                  <Button variant="outline" onClick={() => goToStep(2)}>
+                    Back
+                  </Button>
+                  <Button onClick={() => goToStep(4)}>Next</Button>
+                </div>
+              </>
+            )}
+
+            {step === 4 && (
+              <>
+                <h2 className="font-medium text-charcoal">Budget</h2>
+                <motion.div
+                  className="mt-3 flex flex-wrap gap-2"
+                  variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {BUDGET_TIERS.map((b) => (
+                    <OptionChip
+                      key={b.value}
+                      label={b.label}
+                      selected={budgetTier === b.value}
+                      onSelect={() => setBudgetTier(b.value)}
+                      reduceMotion={!!reduceMotion}
+                    />
+                  ))}
+                </motion.div>
+                <div className="mt-8 flex justify-between">
+                  <Button variant="outline" onClick={() => goToStep(3)}>
+                    Back
+                  </Button>
+                  <Button onClick={() => goToStep(5)}>Next</Button>
+                </div>
+              </>
+            )}
+
+            {step === 5 && (
+              <div className="space-y-4">
+                <h2 className="font-medium text-charcoal">Contact & Submit</h2>
+                <p className="text-sm text-charcoal/70">
+                  Share your details so we can send your Trip Blueprint and follow up.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full name *</Label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    placeholder="Jane Doe"
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="jane@example.com"
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp">WhatsApp (optional)</Label>
+                  <Input
+                    id="whatsapp"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="+1 234 567 8900"
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message (optional)</Label>
+                  <Textarea
+                    id="message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Any special requests or dates?"
+                    rows={3}
+                    className="w-full"
+                  />
+                </div>
+                <div className="mt-8 flex justify-between">
+                  <Button variant="outline" onClick={() => goToStep(4)}>
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleSubmitContact}
+                    disabled={submitting || !fullName.trim() || !email.trim()}
+                  >
+                    {submitting ? "Submitting…" : "Get my Trip Blueprint"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </Container>
+  );
+}
+
+function OptionChip({
+  label,
+  selected,
+  onSelect,
+  reduceMotion,
+}: {
+  label: string;
+  selected: boolean;
+  onSelect: () => void;
+  reduceMotion: boolean;
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onSelect}
+      variants={STAGGER_ITEM}
+      whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+      whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+      transition={{ duration: 0.2 }}
+      className={clsx(
+        "rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200",
+        selected
+          ? "bg-teal text-white shadow-elegant ring-2 ring-teal/30 ring-offset-2"
+          : "bg-white text-charcoal shadow-soft hover:bg-charcoal/5"
+      )}
+      aria-pressed={selected}
+    >
+      {label}
+    </motion.button>
   );
 }

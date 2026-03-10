@@ -36,6 +36,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={montserrat.variable}>
+      <head>
+        <link rel="preload" as="video" href="/images/Cinematic.webm" />
+      </head>
       <body className="font-sans">
         <SessionProvider>
           <JsonLd data={organizationJsonLd()} />

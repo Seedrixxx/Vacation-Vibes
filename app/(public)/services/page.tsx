@@ -2,6 +2,9 @@ import { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 
+// Static content only; edge for fast cold start.
+export const runtime = "edge";
+
 export const metadata: Metadata = {
   title: "Services | Vacation Vibez",
   description: "Custom itineraries, honeymoon planning, group tours, corporate travel, and visa support.",

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
+import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import {
   FileText,
   MapPin,
@@ -123,6 +124,10 @@ export default async function AdminDashboardPage() {
           </Link>
         </div>
       )}
+
+      <section className="pt-8 border-t border-charcoal/10">
+        <AdminAnalytics />
+      </section>
     </div>
   );
 }

@@ -9,6 +9,8 @@ import { breadcrumbJsonLd, articleJsonLd } from "@/lib/seo/json-ld";
 
 const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
+export const revalidate = 3600;
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

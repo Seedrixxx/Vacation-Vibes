@@ -1,4 +1,4 @@
-import type { Package } from "@/lib/supabase/types";
+import type { PublicPackage } from "@/lib/types/package";
 import type { Experience } from "@/lib/supabase/types";
 import { sortPackagesByScore, pickHighlights } from "./scoring";
 import type { TripDesignerInput } from "./scoring";
@@ -27,7 +27,7 @@ const TRAVEL_LABELS: Record<string, string> = {
 
 export function buildBlueprint(
   input: TripDesignerInput,
-  packages: Package[],
+  packages: PublicPackage[],
   experiences: Experience[]
 ): TripBlueprint {
   const blueprintId = `bp-${Date.now()}`;

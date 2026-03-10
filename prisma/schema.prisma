@@ -160,6 +160,8 @@ model Package {
   packageListItems        PackageListItem[]
   packagePricingOptions    PackagePricingOption[]
   tripOrders               TripOrder[]
+  @@index([isPublished])
+  @@index([isPublished, updatedAt])
 }
 
 model PackageDay {
@@ -234,6 +236,7 @@ model ItineraryTemplate {
 model TripOrder {
   id                String          @id @default(cuid())
   invoiceNumber     String          @unique
+  trackingToken     String?         @unique
   source            TripOrderSource
   packageId         String?
   package           Package?        @relation(fields: [packageId], references: [id], onDelete: SetNull)
@@ -261,6 +264,7 @@ model TripOrder {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   paymentReceipts   PaymentReceipt[]
+  @@index([createdAt])
 }
 
 model PaymentReceipt {
@@ -275,6 +279,8 @@ model PaymentReceipt {
   receiptUrl            String?
   rawJson               Json?
   createdAt             DateTime         @default(now())
+  @@index([tripOrderId])
+  @@index([createdAt])
 }
 
 model InvoiceSequence {

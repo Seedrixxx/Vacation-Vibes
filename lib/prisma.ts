@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+// Singleton for serverless (Vercel) to avoid connection exhaustion.
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 export const prisma =

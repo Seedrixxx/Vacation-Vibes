@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { Container } from "@/components/ui/Container";
 import { TourPackagesSubNav } from "@/components/tour-packages/TourPackagesSubNav";
 
+export const revalidate = 3600;
+
 export const metadata = {
   title: "Tour Packages | Vacation Vibes",
   description: "Sri Lanka inbound and multi-destination tour packages. Handcrafted itineraries for every vibe.",
@@ -45,7 +47,7 @@ export default async function TourPackagesPage({
       : "Curated Sri Lanka packages. Culture, wildlife, tea country, and beaches.";
 
   return (
-    <div className="bg-sand py-12 lg:py-20">
+    <div className="bg-sand py-12 lg:py-20" data-chat-section>
       <Container>
         <header className="mb-10 text-center">
           <h1 className="font-serif text-4xl font-semibold text-charcoal sm:text-5xl">
@@ -56,17 +58,19 @@ export default async function TourPackagesPage({
           </p>
         </header>
 
-        <TourPackagesSubNav currentTab={tab} />
+        <div className="flex justify-center">
+          <TourPackagesSubNav currentTab={tab} />
+        </div>
 
-        <section className="mt-10">
+        <section className="mt-10 text-center">
           <div className="mb-8">
             <h2 className="font-serif text-2xl font-semibold text-charcoal">{title}</h2>
-            <p className="mt-1 text-charcoal/70">{subtitle}</p>
+            <p className="mx-auto mt-1 max-w-xl text-charcoal/70">{subtitle}</p>
           </div>
 
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {packages.length === 0 ? (
-              <p className="col-span-full py-12 text-center text-charcoal/60">
+              <p className="col-span-full py-12 text-charcoal/60">
                 No {title.toLowerCase()} packages yet. Check back soon.
               </p>
             ) : (

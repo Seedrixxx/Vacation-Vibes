@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/Button";
 import { getDestinationBySlug } from "@/lib/data/public";
 import { otherDestinations } from "@/lib/homeData";
 
+export const revalidate = 3600;
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
