@@ -214,7 +214,7 @@ export function TripBlueprintResult() {
     const suggestedTitle = meta?.suggestedPackageTitle ?? null;
     const routeSummary =
       itinerary.length > 0
-        ? [...new Set(itinerary.map((d) => d.from || d.to).filter(Boolean))].join(" → ") || null
+        ? Array.from(new Set(itinerary.map((d) => d.from || d.to).filter(Boolean))).join(" → ") || null
         : null;
     const highlightsFromDays = itinerary.map((d) => d.title).filter((t): t is string => Boolean(t?.trim()));
 
@@ -266,14 +266,14 @@ export function TripBlueprintResult() {
         {(meta?.summaryParagraph ?? "").trim().length > 0 && (
           <section className="mt-8 rounded-2xl bg-white p-6 shadow-soft">
             <h2 className="text-sm font-semibold text-charcoal/70 uppercase tracking-wide">Overview</h2>
-            <p className="mt-3 text-charcoal/90">{meta.summaryParagraph}</p>
+            <p className="mt-3 text-charcoal/90">{meta?.summaryParagraph}</p>
           </section>
         )}
 
         {(meta?.aiExplanation ?? "").trim().length > 0 && (
           <section className="mt-6 rounded-2xl border border-teal/15 bg-teal/5 p-5">
             <h2 className="text-sm font-semibold text-charcoal/80">Why this trip fits you</h2>
-            <p className="mt-2 text-charcoal/90">{meta.aiExplanation}</p>
+            <p className="mt-2 text-charcoal/90">{meta?.aiExplanation}</p>
           </section>
         )}
 
@@ -287,7 +287,7 @@ export function TripBlueprintResult() {
         {(meta?.customerMessage ?? "").trim().length > 0 && (
           <section className="mt-6 rounded-2xl border border-charcoal/10 bg-charcoal/[0.02] p-4">
             <h2 className="text-sm font-medium text-charcoal/60">Your note</h2>
-            <p className="mt-1 text-charcoal/90">{meta.customerMessage}</p>
+            <p className="mt-1 text-charcoal/90">{meta?.customerMessage}</p>
           </section>
         )}
 

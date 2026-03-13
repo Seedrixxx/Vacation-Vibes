@@ -26,7 +26,10 @@ export function HeroVideo() {
   };
 
   useEffect(() => {
-    ensurePlaying();
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.play().catch(() => setVideoError(true));
   }, []);
 
   useMotionValueEvent(volume, "change", (v) => {

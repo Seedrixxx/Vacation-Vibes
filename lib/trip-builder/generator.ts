@@ -65,7 +65,7 @@ function scoreTemplateMatch(
     const templateTagsLower = new Set((template.tags ?? []).map((t) => t.toLowerCase()));
     if (templateTagsLower.has(interest.toLowerCase())) {
       score += 15;
-    } else if ([...effectiveTags].some((t) => templateTagsLower.has(t))) {
+    } else if (Array.from(effectiveTags).some((t) => templateTagsLower.has(t))) {
       score += 8;
     }
   }
@@ -106,9 +106,9 @@ export async function selectTemplate(inputs: BuildInputs) {
     orderBy: { id: "asc" },
   });
 
-  const sortByDurationCloseness = (
-    list: { durationNights: number | null; durationDays: number | null }[]
-  ) =>
+  const sortByDurationCloseness = <T extends { durationNights: number | null; durationDays: number | null }>(
+    list: T[]
+  ): T[] =>
     [...list].sort((a, b) => {
       const da =
         Math.abs((a.durationNights ?? 0) - nights) + Math.abs((a.durationDays ?? 0) - days);

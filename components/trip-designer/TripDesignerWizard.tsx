@@ -313,7 +313,7 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
                 <div className="rounded-lg border border-charcoal/10 bg-charcoal/[0.03] px-4 py-3 text-sm text-charcoal/80">
                   <p className="font-medium text-charcoal/90">Your selections</p>
                   <ul className="mt-1 list-inside list-disc space-y-0.5">
-                    <li>{TRAVEL_TYPE_LABELS[travelType] ?? travelType || "—"}</li>
+                    <li>{(TRAVEL_TYPE_LABELS[travelType] ?? travelType) || "—"}</li>
                     <li>{duration} days</li>
                     <li>Budget: {budgetTier === "luxury" ? "Luxury" : "Mid-range"}</li>
                     {interestSlugs.length > 0 && (

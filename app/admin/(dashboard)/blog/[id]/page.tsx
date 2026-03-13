@@ -12,6 +12,7 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
 
   const wasPublished = post.isPublished;
   const currentPublishedAt = post.publishedAt;
+  const currentSlug = post.slug;
 
   async function update(formData: FormData) {
     "use server";
@@ -34,7 +35,7 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
       },
     });
     revalidatePath("/blog");
-    revalidatePath(`/blog/${post.slug}`);
+    revalidatePath(`/blog/${currentSlug}`);
     revalidatePath(`/blog/${newSlug}`);
     revalidateTag("blog");
     redirect("/admin/blog");

@@ -15,8 +15,9 @@ export async function POST(request: Request) {
   const parsed = tripOrderCreateSchema.safeParse(body);
   if (!parsed.success) {
     const flat = parsed.error.flatten();
-    const firstField = flat.fieldErrors && Object.keys(flat.fieldErrors)[0];
-    const firstMessage = firstField && flat.fieldErrors[firstField]?.[0];
+    const fieldErrors = flat.fieldErrors as Record<string, string[] | undefined>;
+    const firstField = fieldErrors && Object.keys(fieldErrors)[0];
+    const firstMessage = firstField ? fieldErrors[firstField]?.[0] : undefined;
     const message = firstMessage ?? "Validation failed";
     return NextResponse.json(
       { error: message, details: flat },

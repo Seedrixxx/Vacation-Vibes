@@ -318,8 +318,8 @@ async function main() {
         packageListItems: {
           create: [
             ...p.highlights.map((h, i) => ({ type: "HIGHLIGHT" as const, label: h, order: i })),
-            ...(Array.isArray(p.inclusions) ? p.inclusions : p.inclusions.split(", ")).map((label: string, i: number) => ({ type: "INCLUSION" as const, label, order: i })),
-            ...(Array.isArray(p.exclusions) ? p.exclusions : p.exclusions.split(", ")).map((label: string, i: number) => ({ type: "EXCLUSION" as const, label, order: i })),
+            ...(Array.isArray(p.inclusions) ? p.inclusions : String(p.inclusions ?? "").split(", ")).map((label: string, i: number) => ({ type: "INCLUSION" as const, label, order: i })),
+            ...(Array.isArray(p.exclusions) ? p.exclusions : String(p.exclusions ?? "").split(", ")).map((label: string, i: number) => ({ type: "EXCLUSION" as const, label, order: i })),
           ],
         },
         packagePricingOptions: {

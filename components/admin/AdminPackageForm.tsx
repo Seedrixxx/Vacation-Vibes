@@ -20,7 +20,7 @@ export function AdminPackageForm({
 
   useEffect(() => {
     if (initialDays?.length) setDays(initialDays);
-  }, [initialDays?.length]);
+  }, [initialDays]);
 
   const addDay = () => {
     setDays((d) => [...d, { day_number: d.length + 1, title: "", description: "", location: "" }]);
