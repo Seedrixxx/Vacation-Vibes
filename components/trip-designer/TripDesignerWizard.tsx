@@ -42,6 +42,13 @@ const BUDGET_TIERS = [
   { value: "luxury", label: "Luxury" },
 ];
 
+const TRAVEL_TYPE_LABELS: Record<string, string> = {
+  cultural: "Cultural & heritage",
+  beach: "Beach & relaxation",
+  adventure: "Adventure & wildlife",
+  luxury: "Luxury & wellness",
+};
+
 export function TripDesignerWizard({ experiences = [] }: { experiences?: Experience[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -62,6 +69,9 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const packageSlug = searchParams.get("package") ?? undefined;
+  const destinationSlug = searchParams.get("destination") ?? undefined;
+
   const totalSteps = 5;
 
   const goToStep = (next: number) => {
@@ -77,8 +87,11 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
 
   const handleSubmitContact = async () => {
     setSubmitting(true);
+    const messageTrimmed = message.trim() || undefined;
     const inputsJson = {
       travel_type: travelType,
+      style: travelType || undefined,
+      interest: travelType || undefined,
       duration_days: duration,
       durationNights: duration - 1,
       durationDays: duration,
@@ -86,6 +99,9 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
       budget_tier: budgetTier,
       country: "Sri Lanka",
       tripType: "INBOUND",
+      package_slug: packageSlug ?? undefined,
+      destination: destinationSlug ?? undefined,
+      message: messageTrimmed,
     };
     try {
       const res = await fetch("/api/trip-orders", {
@@ -101,7 +117,6 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
           durationNights: duration - 1,
           durationDays: duration,
           inputsJson,
-          handoffMode: "AGENT",
         }),
       });
       const data = await res.json();
@@ -127,14 +142,14 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
     <Container className="max-w-2xl">
       <div className="overflow-hidden rounded-2xl bg-white/95 px-6 py-8 shadow-soft backdrop-blur-sm sm:px-8 sm:py-10">
         <h1 className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">
-          Trip Designer
+          Build your trip
         </h1>
         <p className="mt-2 text-charcoal/70">
-          Tell us your style and we’ll suggest a route and experiences.
+          Answer a few quick questions and we’ll create a personalized Trip Blueprint—route, experiences, and next steps. No commitment until you’re ready.
         </p>
         {(searchParams.get("package") || searchParams.get("destination") || searchParams.get("experience")) && (
           <p className="mt-1 text-sm text-teal/90">
-            You’re building from a selection — we’ll tailor your blueprint accordingly.
+            You’re building from a selection—we’ll tailor your blueprint accordingly.
           </p>
         )}
 
@@ -168,7 +183,10 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
           >
             {step === 1 && (
               <>
-                <h2 className="font-medium text-charcoal">Travel type</h2>
+                <h2 className="font-medium text-charcoal">What’s the main focus of your trip?</h2>
+                <p className="mt-1 text-sm text-charcoal/70">
+                  This helps us suggest the right experiences and pace for your journey.
+                </p>
                 <motion.div
                   className="mt-3 flex flex-wrap gap-2"
                   variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }}
@@ -195,7 +213,10 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
 
             {step === 2 && (
               <>
-                <h2 className="font-medium text-charcoal">Duration</h2>
+                <h2 className="font-medium text-charcoal">How long do you have?</h2>
+                <p className="mt-1 text-sm text-charcoal/70">
+                  We’ll design a route that fits your timeline.
+                </p>
                 <motion.div
                   className="mt-3 flex flex-wrap gap-2"
                   variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }}
@@ -223,9 +244,9 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
 
             {step === 3 && (
               <>
-                <h2 className="font-medium text-charcoal">Interests (optional)</h2>
+                <h2 className="font-medium text-charcoal">Any must-do experiences?</h2>
                 <p className="mt-1 text-sm text-charcoal/70">
-                  Pick experiences you’d like included. We’ll prioritize these in your blueprint.
+                  Optional—pick a few or skip; we’ll still tailor your trip.
                 </p>
                 <motion.div
                   className="mt-3 flex flex-wrap gap-2"
@@ -254,7 +275,10 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
 
             {step === 4 && (
               <>
-                <h2 className="font-medium text-charcoal">Budget</h2>
+                <h2 className="font-medium text-charcoal">What’s your budget comfort?</h2>
+                <p className="mt-1 text-sm text-charcoal/70">
+                  We’ll suggest options that match—you can always refine later.
+                </p>
                 <motion.div
                   className="mt-3 flex flex-wrap gap-2"
                   variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }}
@@ -282,10 +306,24 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
 
             {step === 5 && (
               <div className="space-y-4">
-                <h2 className="font-medium text-charcoal">Contact & Submit</h2>
+                <h2 className="font-medium text-charcoal">Almost there—how can we reach you?</h2>
                 <p className="text-sm text-charcoal/70">
-                  Share your details so we can send your Trip Blueprint and follow up.
+                  We’ll create your personalized Trip Blueprint and send it to this email. You can then confirm details or pay a deposit—no commitment until you’re ready.
                 </p>
+                <div className="rounded-lg border border-charcoal/10 bg-charcoal/[0.03] px-4 py-3 text-sm text-charcoal/80">
+                  <p className="font-medium text-charcoal/90">Your selections</p>
+                  <ul className="mt-1 list-inside list-disc space-y-0.5">
+                    <li>{TRAVEL_TYPE_LABELS[travelType] ?? travelType || "—"}</li>
+                    <li>{duration} days</li>
+                    <li>Budget: {budgetTier === "luxury" ? "Luxury" : "Mid-range"}</li>
+                    {interestSlugs.length > 0 && (
+                      <li>
+                        Interests: {interestSlugs.slice(0, 3).map((s) => experiences.find((e) => e.slug === s)?.name ?? s).join(", ")}
+                        {interestSlugs.length > 3 ? "…" : ""}
+                      </li>
+                    )}
+                  </ul>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full name *</Label>
                   <Input
@@ -320,12 +358,12 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="message">Message (optional)</Label>
+                  <Label htmlFor="message">Anything else we should know? (optional)</Label>
                   <Textarea
                     id="message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Any special requests or dates?"
+                    placeholder="e.g. preferred dates, group size, or special requests"
                     rows={3}
                     className="w-full"
                   />
@@ -338,7 +376,7 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
                     onClick={handleSubmitContact}
                     disabled={submitting || !fullName.trim() || !email.trim()}
                   >
-                    {submitting ? "Submitting…" : "Get my Trip Blueprint"}
+                    {submitting ? "Creating your blueprint…" : "Get my Trip Blueprint"}
                   </Button>
                 </div>
               </div>

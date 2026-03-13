@@ -14,8 +14,12 @@ export async function POST(request: Request) {
   const body = await request.json();
   const parsed = tripOrderCreateSchema.safeParse(body);
   if (!parsed.success) {
+    const flat = parsed.error.flatten();
+    const firstField = flat.fieldErrors && Object.keys(flat.fieldErrors)[0];
+    const firstMessage = firstField && flat.fieldErrors[firstField]?.[0];
+    const message = firstMessage ?? "Validation failed";
     return NextResponse.json(
-      { error: "Validation failed", details: parsed.error.flatten() },
+      { error: message, details: flat },
       { status: 400 }
     );
   }

@@ -44,6 +44,9 @@ export default async function AdminPackagesPage() {
           </button>
         </Link>
       </div>
+      <p className="text-sm text-charcoal/60">
+        Packages appear on the <strong>Tour Packages</strong> page only when <strong>Published</strong> is checked. Use <strong>Trip type</strong> INBOUND for the Sri Lanka tab and OUTBOUND for Beyond Sri Lanka.
+      </p>
       <div className="rounded-lg border border-charcoal/10 bg-white">
         <Table>
           <TableHeader>

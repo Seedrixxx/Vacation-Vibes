@@ -7,10 +7,23 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { getWhatsAppLink } from "@/lib/config/nav";
 
+/** Grounded summary and suggested package from order creation (stored in itineraryJson.meta). */
+type ResultMeta = {
+  summaryParagraph?: string;
+  suggestedPackageSlug?: string | null;
+  suggestedPackageTitle?: string | null;
+  customerMessage?: string | null;
+  /** Optional AI-generated "why this trip fits you" (grounded); fallback is summaryParagraph. */
+  aiExplanation?: string | null;
+};
+
 /** Trip order data from GET /api/trip-orders/[invoice] (public-safe, no PII). Result data is never read from sessionStorage. */
 type TripOrderResult = {
   invoiceNumber: string;
-  itineraryJson: { days?: Array<{ dayNumber?: number; from?: string; to?: string; title?: string; description?: string }> };
+  itineraryJson: {
+    days?: Array<{ dayNumber?: number; from?: string; to?: string; title?: string; description?: string }>;
+    meta?: ResultMeta;
+  };
   pricingJson: { total?: number; deposit?: number; currency?: string; items?: Array<{ label: string; amount: number }> };
   handoffMode: string;
   trackingToken?: string | null;
@@ -190,80 +203,161 @@ export function TripBlueprintResult() {
 
   if (tripOrder && tripOrder.invoiceNumber) {
     const itinerary = tripOrder.itineraryJson?.days ?? [];
+    const meta = tripOrder.itineraryJson?.meta;
     const pricing = tripOrder.pricingJson;
     const total = pricing?.total ?? 0;
     const deposit = pricing?.deposit ?? 0;
     const isCheckout = tripOrder.handoffMode === "CHECKOUT";
     const summary = `Hi, I have a trip request. Invoice: ${tripOrder.invoiceNumber}. I’d like to discuss or confirm my booking.`;
     const whatsAppUrl = `${getWhatsAppLink()}?text=${encodeURIComponent(summary)}`;
+    const suggestedSlug = meta?.suggestedPackageSlug ?? null;
+    const suggestedTitle = meta?.suggestedPackageTitle ?? null;
+    const routeSummary =
+      itinerary.length > 0
+        ? [...new Set(itinerary.map((d) => d.from || d.to).filter(Boolean))].join(" → ") || null
+        : null;
+    const highlightsFromDays = itinerary.map((d) => d.title).filter((t): t is string => Boolean(t?.trim()));
 
     return (
       <Container className="max-w-2xl">
-        <h1 className="font-serif text-3xl font-semibold text-charcoal">
-          Your Trip Request
-        </h1>
-        <p className="mt-2 text-charcoal/70">
-          Invoice: <strong>{tripOrder.invoiceNumber}</strong>. Save this to track your trip.
-        </p>
+        <section className="text-center">
+          <h1 className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">
+            Your Trip Blueprint
+          </h1>
+          <p className="mt-2 text-charcoal/70">
+            Invoice <strong>{tripOrder.invoiceNumber}</strong> — save this to track your trip.
+          </p>
+          <p className="mt-1 text-sm text-charcoal/60">
+            Here’s your personalized outline and next steps.
+          </p>
+        </section>
+
+        <section className="mt-8 rounded-2xl border-2 border-teal/20 bg-teal/5 p-6 shadow-soft">
+          <h2 className="text-lg font-semibold text-charcoal">Next step</h2>
+          <p className="mt-1 text-sm text-charcoal/80">
+            {isCheckout && total > 0
+              ? "Secure your trip with a deposit or pay in full."
+              : "We'll send a personalized quote. Reach out to confirm details."}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            {isCheckout && total > 0 && (
+              <>
+                <Button onClick={() => handlePay("deposit")} disabled={!!payLoading}>
+                  {payLoading === "deposit" ? "Redirecting…" : "Pay deposit"}
+                </Button>
+                <Button variant="secondary" onClick={() => handlePay("full")} disabled={!!payLoading}>
+                  {payLoading === "full" ? "Redirecting…" : "Pay in full"}
+                </Button>
+              </>
+            )}
+            <Button as="a" href={whatsAppUrl} target="_blank" rel="noopener noreferrer" variant={isCheckout && total > 0 ? "outline" : "primary"}>
+              WhatsApp us
+            </Button>
+            <Button
+              as="a"
+              href={tripOrder.trackingToken ? `/track?token=${encodeURIComponent(tripOrder.trackingToken)}` : "/track"}
+              variant="outline"
+            >
+              Track your trip
+            </Button>
+          </div>
+        </section>
+
+        {(meta?.summaryParagraph ?? "").trim().length > 0 && (
+          <section className="mt-8 rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="text-sm font-semibold text-charcoal/70 uppercase tracking-wide">Overview</h2>
+            <p className="mt-3 text-charcoal/90">{meta.summaryParagraph}</p>
+          </section>
+        )}
+
+        {(meta?.aiExplanation ?? "").trim().length > 0 && (
+          <section className="mt-6 rounded-2xl border border-teal/15 bg-teal/5 p-5">
+            <h2 className="text-sm font-semibold text-charcoal/80">Why this trip fits you</h2>
+            <p className="mt-2 text-charcoal/90">{meta.aiExplanation}</p>
+          </section>
+        )}
+
+        {routeSummary && (
+          <section className="mt-6 rounded-2xl bg-white p-5 shadow-soft">
+            <h2 className="text-sm font-semibold text-charcoal/70 uppercase tracking-wide">Route at a glance</h2>
+            <p className="mt-2 text-charcoal/90">{routeSummary}</p>
+          </section>
+        )}
+
+        {(meta?.customerMessage ?? "").trim().length > 0 && (
+          <section className="mt-6 rounded-2xl border border-charcoal/10 bg-charcoal/[0.02] p-4">
+            <h2 className="text-sm font-medium text-charcoal/60">Your note</h2>
+            <p className="mt-1 text-charcoal/90">{meta.customerMessage}</p>
+          </section>
+        )}
+
+        {suggestedSlug && (
+          <section className="mt-6 rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="text-sm font-semibold text-charcoal/70 uppercase tracking-wide">Suggested package</h2>
+            <p className="mt-1 font-medium text-charcoal">
+              {suggestedTitle ?? suggestedSlug}
+            </p>
+            <Button as="a" href={`/packages/${encodeURIComponent(suggestedSlug)}`} variant="outline" className="mt-3">
+              View package
+            </Button>
+          </section>
+        )}
 
         {itinerary.length > 0 && (
-          <div className="mt-8 space-y-4 rounded-2xl bg-white p-6 shadow-soft">
-            <h2 className="text-lg font-medium text-charcoal">Itinerary</h2>
-            <ul className="space-y-3">
+          <section className="mt-8 rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="text-lg font-medium text-charcoal">Day-by-day itinerary</h2>
+            <ul className="mt-4 space-y-4">
               {itinerary.map((day, i) => (
-                <li key={i} className="border-l-2 border-teal/30 pl-3">
-                  <span className="font-medium">Day {day.dayNumber ?? i + 1}</span>
+                <li key={i} className="border-l-2 border-teal/30 pl-4">
+                  <span className="font-medium text-charcoal">Day {day.dayNumber ?? i + 1}</span>
                   {(day.from || day.to) && (
-                    <span className="text-charcoal/70 text-sm ml-2">
+                    <span className="ml-2 text-sm text-charcoal/70">
                       {day.from ?? "—"} → {day.to ?? "—"}
                     </span>
                   )}
-                  {day.title && <div className="font-medium mt-1">{day.title}</div>}
+                  {day.title && <div className="mt-1 font-medium text-charcoal/90">{day.title}</div>}
                 </li>
               ))}
             </ul>
-          </div>
+          </section>
         )}
 
-        {(total > 0 || (pricing?.items?.length ?? 0) > 0) && (
-          <div className="mt-6 rounded-2xl bg-white p-6 shadow-soft">
+        {highlightsFromDays.length > 0 && (
+          <section className="mt-6 rounded-2xl bg-white p-5 shadow-soft">
+            <h2 className="text-sm font-semibold text-charcoal/70 uppercase tracking-wide">Highlights</h2>
+            <ul className="mt-2 list-inside list-disc space-y-1 text-charcoal/90">
+              {highlightsFromDays.slice(0, 8).map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {(total > 0 || (Array.isArray(pricing?.items) && pricing.items.length > 0)) && (
+          <section className="mt-8 rounded-2xl bg-white p-6 shadow-soft">
             <h2 className="text-lg font-medium text-charcoal">Pricing</h2>
-            {pricing?.items?.map((item, i) => (
-              <div key={i} className="flex justify-between mt-2 text-charcoal/80">
-                <span>{item.label}</span>
-                <span>${(item.amount / 100).toLocaleString()}</span>
-              </div>
-            ))}
+            <p className="mt-1 text-sm text-charcoal/60">All amounts in {(pricing?.currency ?? "USD").toUpperCase()}</p>
+            {Array.isArray(pricing?.items) &&
+              pricing.items.map((item: { label: string; amount: number }, i: number) => (
+                <div key={i} className="mt-3 flex justify-between text-charcoal/90">
+                  <span>{item.label}</span>
+                  <span>${(item.amount / 100).toLocaleString()}</span>
+                </div>
+              ))}
             {total > 0 && (
-              <p className="mt-3 font-semibold text-charcoal">
-                Total: ${(total / 100).toLocaleString()} {pricing?.currency ?? "USD"}
+              <p className="mt-4 border-t border-charcoal/10 pt-3 font-semibold text-charcoal">
+                Total: ${(total / 100).toLocaleString()}
               </p>
             )}
-          </div>
+          </section>
         )}
 
-        <div className="mt-8 flex flex-wrap gap-4">
-          {isCheckout && total > 0 && (
-            <>
-              <Button onClick={() => handlePay("deposit")} disabled={!!payLoading}>
-                {payLoading === "deposit" ? "Redirecting…" : "Pay deposit"}
-              </Button>
-              <Button variant="secondary" onClick={() => handlePay("full")} disabled={!!payLoading}>
-                {payLoading === "full" ? "Redirecting…" : "Pay full"}
-              </Button>
-            </>
-          )}
-          <Button as="a" href={whatsAppUrl} target="_blank" rel="noopener noreferrer" variant={isCheckout ? "outline" : "primary"}>
-            WhatsApp us
+        <section className="mt-8 rounded-2xl border border-charcoal/10 bg-charcoal/[0.02] p-5 text-center">
+          <p className="text-sm text-charcoal/80">Questions or want to customize?</p>
+          <Button as="a" href={whatsAppUrl} target="_blank" rel="noopener noreferrer" variant="outline" className="mt-3">
+            Talk to a travel expert on WhatsApp
           </Button>
-          <Button
-            as="a"
-            href={tripOrder.trackingToken ? `/track?token=${encodeURIComponent(tripOrder.trackingToken)}` : "/track"}
-            variant="outline"
-          >
-            Track your trip
-          </Button>
-        </div>
+        </section>
 
         <p className="mt-8 text-center text-sm text-charcoal/60">
           <Link href="/build-your-trip" className="underline hover:text-charcoal">Start over</Link>

@@ -11,33 +11,33 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+/** Static params from structured data only — no API call. */
 export async function generateStaticParams() {
-  try {
-    const { getDestinations } = await import("@/lib/data/public");
-    const destinations = await getDestinations();
-    const other = destinations.filter((d) => !d.focus_inbound);
-    return other.map((d) => ({ slug: d.slug }));
-  } catch {
-    return otherDestinations.map((d) => ({ slug: d.slug }));
-  }
+  return otherDestinations.map((d) => ({ slug: d.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const fromStatic = otherDestinations.find((d) => d.slug === slug);
+  if (fromStatic) {
+    return {
+      title: `${fromStatic.name} | Vacation Vibez`,
+      description: `Explore ${fromStatic.name} with Vacation Vibez. ${fromStatic.tagline}.`,
+    };
+  }
   const destination = await getDestinationBySlug(slug);
-  const fallback = otherDestinations.find((d) => d.slug === slug);
-  const name = destination?.name ?? fallback?.name;
-  const desc = destination?.summary ?? fallback?.tagline;
+  const name = destination?.name ?? "Destination";
+  const desc = destination?.summary ?? "";
   return {
-    title: name ? `${name} | Vacation Vibez` : "Destination | Vacation Vibez",
-    description: name && desc ? `Explore ${name} with Vacation Vibez. ${desc}.` : "Discover extraordinary destinations with Vacation Vibez.",
+    title: `${name} | Vacation Vibez`,
+    description: desc ? `Explore ${name} with Vacation Vibez. ${desc}.` : "Discover extraordinary destinations with Vacation Vibez.",
   };
 }
 
 export default async function DestinationPage({ params }: PageProps) {
   const { slug } = await params;
-  const destination = await getDestinationBySlug(slug);
   const fallback = otherDestinations.find((d) => d.slug === slug);
+  const destination = fallback ? null : await getDestinationBySlug(slug);
 
   if (!destination && !fallback) {
     return (

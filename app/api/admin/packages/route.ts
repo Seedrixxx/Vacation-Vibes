@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdminSessionFromHeaders } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { packageSchema } from "@/lib/validators/package";
@@ -11,7 +12,9 @@ export async function GET() {
     const packages = await prisma.package.findMany({
       orderBy: { updatedAt: "desc" },
       include: {
-        packagePricingOptions: { where: { isActive: true }, orderBy: { basePrice: "asc" } },
+        packagePricingOptions: { where: { isActive: true }, orderBy: [{ orderIndex: "asc" }, { basePrice: "asc" }] },
+        packageRouteStops: { orderBy: { orderIndex: "asc" }, include: { destination: true } },
+        packageHotelOptions: { orderBy: { orderIndex: "asc" } },
       },
     });
     return NextResponse.json(packages);
@@ -44,62 +47,111 @@ export async function POST(request: Request) {
     );
   }
 
+  const data = parsed.data;
   try {
     const pkg = await prisma.package.create({
       data: {
-        title: parsed.data.title,
-        slug: parsed.data.slug,
-        tripType: parsed.data.tripType,
-        durationNights: parsed.data.durationNights,
-        durationDays: parsed.data.durationDays,
-        summary: parsed.data.summary,
-        content: parsed.data.content || null,
-        heroImage: parsed.data.heroImage || null,
-        gallery: parsed.data.gallery,
-        tags: parsed.data.tags,
-        ctaMode: parsed.data.ctaMode,
-        isPublished: parsed.data.isPublished,
-        metaTitle: parsed.data.metaTitle || null,
-        metaDescription: parsed.data.metaDescription || null,
+        title: data.title,
+        slug: data.slug,
+        tripType: data.tripType,
+        country: data.country || null,
+        primaryDestinationId: data.primaryDestinationId || null,
+        durationNights: data.durationNights,
+        durationDays: data.durationDays,
+        summary: data.summary,
+        shortDescription: data.shortDescription || null,
+        overview: data.overview || null,
+        content: data.content || null,
+        heroImage: data.heroImage || null,
+        gallery: data.gallery,
+        tags: data.tags,
+        featured: data.featured ?? false,
+        startingPrice: data.startingPrice ?? null,
+        startingPriceCurrency: data.startingPriceCurrency || null,
+        badge: data.badge || null,
+        templateEligible: data.templateEligible ?? false,
+        ctaMode: data.ctaMode,
+        isPublished: data.isPublished,
+        metaTitle: data.metaTitle || null,
+        metaDescription: data.metaDescription || null,
         packageDays: {
-          create: parsed.data.packageDays.map((d) => ({
+          create: data.packageDays.map((d) => ({
             dayNumber: d.dayNumber,
             fromLocation: d.fromLocation || null,
             toLocation: d.toLocation || null,
+            overnightLocation: d.overnightLocation || null,
             title: d.title || null,
+            summary: d.summary || null,
             description: d.description,
-            modules: d.modules,
-            isOptional: d.isOptional,
+            meals: d.meals || null,
+            notes: d.notes || null,
+            modules: d.modules ?? [],
+            isOptional: d.isOptional ?? false,
             dayImage: d.dayImage || null,
             order: d.order,
+            dayExperiences: (d.dayExperiences?.length)
+              ? { create: (d.dayExperiences ?? []).map((de) => ({ experienceId: de.experienceId || null, customLabel: de.customLabel || null, orderIndex: de.orderIndex ?? 0 })) }
+              : undefined,
           })),
         },
         packageListItems: {
-          create: parsed.data.packageListItems.map((i) => ({
+          create: data.packageListItems.map((i) => ({
             type: i.type,
             label: i.label,
             order: i.order,
           })),
         },
         packagePricingOptions: {
-          create: parsed.data.packagePricingOptions.map((o) => ({
+          create: data.packagePricingOptions.map((o) => ({
             label: o.label,
-            currency: o.currency,
+            pricingBasis: o.pricingBasis || null,
+            occupancyType: o.occupancyType || null,
+            currency: o.currency ?? "USD",
             basePrice: o.basePrice,
             salePrice: o.salePrice ?? null,
             depositType: o.depositType,
             depositValue: o.depositValue ?? null,
-            isActive: o.isActive,
+            quoteOnly: o.quoteOnly ?? false,
+            tierName: o.tierName || null,
+            orderIndex: o.orderIndex ?? 0,
+            isActive: o.isActive ?? true,
             notes: o.notes ?? null,
+          })),
+        },
+        packageRouteStops: {
+          create: (data.packageRouteStops ?? []).map((s) => ({
+            destinationId: s.destinationId || null,
+            freeTextLocation: s.freeTextLocation || null,
+            orderIndex: s.orderIndex ?? 0,
+          })),
+        },
+        packageHotelOptions: {
+          create: (data.packageHotelOptions ?? []).map((h) => ({
+            tierName: h.tierName || null,
+            hotelName: h.hotelName || null,
+            location: h.location || null,
+            category: h.category || null,
+            mealPlan: h.mealPlan || null,
+            roomType: h.roomType || null,
+            dayFrom: h.dayFrom ?? null,
+            dayTo: h.dayTo ?? null,
+            orderIndex: h.orderIndex ?? 0,
           })),
         },
       },
       include: {
-        packageDays: { orderBy: { order: "asc" } },
+        packageDays: { orderBy: { order: "asc" }, include: { dayExperiences: { include: { experience: true } } } },
         packageListItems: { orderBy: [{ type: "asc" }, { order: "asc" }] },
         packagePricingOptions: true,
+        packageRouteStops: { orderBy: { orderIndex: "asc" }, include: { destination: true } },
+        packageHotelOptions: { orderBy: { orderIndex: "asc" } },
       },
     });
+    revalidatePath("/tour-packages");
+    revalidatePath("/packages");
+    revalidatePath("/");
+    revalidatePath(`/packages/${pkg.slug}`);
+    revalidateTag("packages");
     return NextResponse.json(pkg);
   } catch (err) {
     console.error("Package create error:", err);

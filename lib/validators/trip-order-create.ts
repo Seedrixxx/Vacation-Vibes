@@ -1,26 +1,32 @@
 import { z } from "zod";
 
+const optionalNullString = z
+  .string()
+  .optional()
+  .nullable()
+  .transform((v) => (v === "" ? null : v));
+
 export const tripOrderCreateSchema = z.object({
   source: z.enum(["PACKAGE", "BUILD_TRIP"]),
   packageId: z.string().optional(),
   pricingOptionId: z.string().optional(),
-  customerFullName: z.string().min(1),
-  customerEmail: z.string().email(),
-  customerWhatsapp: z.string().optional().nullable(),
+  customerFullName: z.string().min(1, "Full name is required").transform((s) => s.trim()),
+  customerEmail: z.string().min(1, "Email is required").email("Please enter a valid email").transform((s) => s.trim().toLowerCase()),
+  customerWhatsapp: optionalNullString,
   tripType: z.string().optional().nullable(),
   country: z.string().optional().nullable(),
-  durationNights: z.number().int().min(0).optional().nullable(),
-  durationDays: z.number().int().min(1).optional().nullable(),
+  durationNights: z.coerce.number().int().min(0).optional().nullable(),
+  durationDays: z.coerce.number().int().min(1).optional().nullable(),
   startDate: z.string().optional().nullable(),
   endDate: z.string().optional().nullable(),
-  paxAdults: z.number().int().min(0).optional().nullable(),
-  paxChildren: z.number().int().min(0).optional().nullable(),
-  inputsJson: z.record(z.unknown()).optional().default({}),
-  itineraryJson: z.record(z.unknown()).optional().default({}),
-  pricingJson: z.record(z.unknown()).optional().default({}),
+  paxAdults: z.coerce.number().int().min(0).optional().nullable(),
+  paxChildren: z.coerce.number().int().min(0).optional().nullable(),
+  inputsJson: z.record(z.string(), z.unknown()).optional().nullable().transform((v) => (v != null && typeof v === "object" && !Array.isArray(v) ? v : {})),
+  itineraryJson: z.record(z.string(), z.unknown()).optional().nullable().transform((v) => (v != null && typeof v === "object" && !Array.isArray(v) ? v : {})),
+  pricingJson: z.record(z.string(), z.unknown()).optional().nullable().transform((v) => (v != null && typeof v === "object" && !Array.isArray(v) ? v : {})),
   currency: z.string().default("USD"),
-  totalAmount: z.number().int().min(0).optional().nullable(),
-  depositAmount: z.number().int().min(0).optional().nullable(),
+  totalAmount: z.coerce.number().int().min(0).optional().nullable(),
+  depositAmount: z.coerce.number().int().min(0).optional().nullable(),
   handoffMode: z.enum(["CHECKOUT", "AGENT"]).optional(),
 });
 

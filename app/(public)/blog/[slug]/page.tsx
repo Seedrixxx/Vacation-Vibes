@@ -11,6 +11,19 @@ const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
 export const revalidate = 3600;
 
+/** Pre-build all published blog post pages; new slugs still work via on-demand generation. */
+export async function generateStaticParams() {
+  try {
+    const { getBlogPosts } = await import("@/lib/data/public");
+    const posts = await getBlogPosts();
+    return posts.map((p) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
+}
+
+export const dynamicParams = true;
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

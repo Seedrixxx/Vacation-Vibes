@@ -1,16 +1,18 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { AdminBlogForm } from "@/components/admin/AdminBlogForm";
 
 export default async function NewBlogPostPage() {
   async function save(formData: FormData) {
     "use server";
+    const slug = formData.get("slug") as string;
     const isPublished = formData.get("is_published") === "on";
     await prisma.blogPost.create({
       data: {
         title: formData.get("title") as string,
-        slug: formData.get("slug") as string,
+        slug,
         excerpt: (formData.get("excerpt") as string) || null,
         content: (formData.get("content") as string) || null,
         heroImageUrl: (formData.get("hero_image_url") as string) || null,
@@ -19,6 +21,9 @@ export default async function NewBlogPostPage() {
         isPublished,
       },
     });
+    revalidatePath("/blog");
+    revalidatePath(`/blog/${slug}`);
+    revalidateTag("blog");
     redirect("/admin/blog");
   }
 

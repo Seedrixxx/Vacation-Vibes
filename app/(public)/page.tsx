@@ -1,70 +1,46 @@
-import { Suspense } from "react";
 import {
   HeroVideo,
   WhySriLanka,
   ExperiencesGrid,
   Packages,
-  HowItWorks,
   Testimonials,
   AboutVacationVibes,
   BeyondSriLanka,
   Services,
   FinalCTA,
 } from "@/components/home";
-import { getPackages, getExperiences, getDestinations } from "@/lib/data/public";
 import { HomeTrustStrip } from "@/components/home/HomeTrustStrip";
 import { HomeBuildHighlight } from "@/components/home/HomeBuildHighlight";
-import { SectionSkeleton } from "@/components/home/SectionSkeleton";
+import { staticTestimonials } from "@/lib/homeData";
+import { getPackages, getTestimonials } from "@/lib/data/public";
 
+/** Home: featured packages and testimonials from DB; experiences, destinations from structured data. */
 export const revalidate = 3600;
 
-async function HomePackagesSection() {
+export default async function HomePage() {
   let featuredPackages: Awaited<ReturnType<typeof getPackages>> = [];
+  let testimonials: Awaited<ReturnType<typeof getTestimonials>> = [];
   try {
-    featuredPackages = await getPackages({ featured: true, limit: 6 });
+    [featuredPackages, testimonials] = await Promise.all([
+      getPackages({ featured: true, limit: 6 }),
+      getTestimonials(),
+    ]);
   } catch {
-    // Fallback when DB not configured
+    // Fallback: Packages uses sriLankaPackages from homeData when given []
   }
-  return <Packages packages={featuredPackages} />;
-}
 
-async function HomeExperiencesSection() {
-  let experiences: Awaited<ReturnType<typeof getExperiences>> = [];
-  try {
-    experiences = await getExperiences();
-  } catch {
-    // Fallback
-  }
-  return <ExperiencesGrid experiences={experiences} />;
-}
+  const testimonialList = testimonials.length > 0 ? testimonials : staticTestimonials;
 
-async function HomeDestinationsSection() {
-  let destinations: Awaited<ReturnType<typeof getDestinations>> = [];
-  try {
-    destinations = await getDestinations();
-  } catch {
-    // Fallback
-  }
-  return <BeyondSriLanka destinations={destinations} />;
-}
-
-export default function HomePage() {
   return (
     <>
       <HeroVideo />
       <HomeTrustStrip />
       <WhySriLanka />
-      <Suspense fallback={<SectionSkeleton className="py-16 lg:py-24" />}>
-        <HomePackagesSection />
-      </Suspense>
+      <Packages packages={featuredPackages} />
       <HomeBuildHighlight />
-      <Suspense fallback={<SectionSkeleton className="py-16 lg:py-24" />}>
-        <HomeExperiencesSection />
-      </Suspense>
-      <Suspense fallback={<SectionSkeleton className="py-16 lg:py-24" />}>
-        <HomeDestinationsSection />
-      </Suspense>
-      <Testimonials />
+      <ExperiencesGrid experiences={[]} />
+      <BeyondSriLanka destinations={[]} />
+      <Testimonials testimonials={testimonialList} />
       <AboutVacationVibes />
       <Services />
       <FinalCTA />

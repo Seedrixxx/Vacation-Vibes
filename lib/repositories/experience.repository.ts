@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Experience } from "@/lib/supabase/types";
 
@@ -26,11 +27,19 @@ function mapToExperience(e: {
   };
 }
 
-export async function getExperiences(destinationId?: string): Promise<Experience[]> {
+async function getExperiencesUncached(destinationId?: string): Promise<Experience[]> {
   const list = await prisma.experience.findMany({
     where: destinationId ? { destinationId } : undefined,
     include: { destination: { select: { name: true } } },
     orderBy: { name: "asc" },
   });
   return list.map(mapToExperience);
+}
+
+export async function getExperiences(destinationId?: string): Promise<Experience[]> {
+  const key = destinationId ? `experiences-${destinationId}` : "experiences-all";
+  return unstable_cache(getExperiencesUncached, [key], {
+    tags: ["experiences"],
+    revalidate: 3600,
+  })(destinationId);
 }

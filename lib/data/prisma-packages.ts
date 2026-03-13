@@ -11,11 +11,15 @@ export type PackageDisplay = {
   hero_image_url: string | null;
   duration_days: number;
   price_from: number;
+  short_description?: string | null;
+  badge?: string | null;
+  highlights?: string[];
 };
 
 /**
  * Fetch published packages from Prisma and map to PackageDisplay.
- * Use as fallback when Supabase packages are empty (e.g. Prisma-only setup).
+ * Prefer getPackages() from public + map to PackageDisplay for listing (single source, includes destination filter).
+ * This remains for fallback or direct Prisma-only usage.
  */
 export async function getPrismaPackagesForDisplay(): Promise<PackageDisplay[]> {
   try {

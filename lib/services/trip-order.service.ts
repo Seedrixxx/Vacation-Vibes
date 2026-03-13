@@ -3,6 +3,10 @@ import { selectTemplate, generateItinerary, pricingEngine, type BuildInputs } fr
 import type { TripOrderCreateInput } from "@/lib/validators/trip-order-create";
 import * as packageRepository from "@/lib/repositories/package.repository";
 import * as tripOrderRepository from "@/lib/repositories/trip-order.repository";
+import { getPackages, getExperiences } from "@/lib/data/public";
+import { buildBlueprint } from "@/lib/trip-designer/blueprint";
+import type { TripDesignerInput } from "@/lib/trip-designer/scoring";
+import { generateTripExplanation } from "@/lib/services/trip-explanation.service";
 
 export type CreateTripOrderResult = {
   invoiceNumber: string;
@@ -139,6 +143,60 @@ export async function createTripOrder(input: TripOrderCreateInput): Promise<Crea
       pricingMode: pricing.pricingMode,
     };
 
+    let summaryParagraph: string;
+    let suggestedPackageSlug: string | null = null;
+    let suggestedPackageTitle: string | null = null;
+    let aiExplanation: string | null = null;
+    try {
+      const [packages, experiences] = await Promise.all([
+        getPackages({ limit: 50, tripType: (buildInputs.tripType as "INBOUND" | "OUTBOUND") ?? undefined }),
+        getExperiences(),
+      ]);
+      const designerInput: TripDesignerInput = {
+        travel_type: String(buildInputs.travel_type ?? "cultural"),
+        duration_days: Number(buildInputs.duration_days ?? buildInputs.durationDays ?? 7),
+        budget_tier: String(buildInputs.budget_tier ?? "mid"),
+        interest_slugs: Array.isArray(buildInputs.interest_slugs) ? buildInputs.interest_slugs as string[] : [],
+        package_slug: buildInputs.package_slug as string | undefined ?? null,
+      };
+      const blueprint = buildBlueprint(designerInput, packages, experiences);
+      summaryParagraph = blueprint.summary_paragraph;
+      suggestedPackageSlug = blueprint.suggested_package_slug;
+      suggestedPackageTitle = blueprint.suggested_package_title;
+
+      const itineraryDaySummaries = (itinerary.days ?? []).map(
+        (d) => d.title || [d.from, d.to].filter(Boolean).join(" → ") || `Day ${d.dayNumber ?? ""}`
+      );
+      aiExplanation = await generateTripExplanation({
+        summaryParagraph: blueprint.summary_paragraph,
+        travelType: String(buildInputs.travel_type ?? "cultural"),
+        durationDays: Number(buildInputs.duration_days ?? buildInputs.durationDays ?? 7),
+        routeOutline: blueprint.route_outline,
+        highlights: blueprint.highlights,
+        itineraryDaySummaries,
+      });
+    } catch {
+      const days = itinerary.days ?? [];
+      const route = days.length > 0
+        ? days.map((d) => d.from || d.to).filter(Boolean).join(" → ") || "your chosen route"
+        : "your chosen route";
+      summaryParagraph = `Your ${buildInputs.durationDays ?? buildInputs.duration_days ?? 7}-day trip includes ${route}. We'll confirm details and send a personalized quote once you're ready.`;
+    }
+
+    const inputs = (input.inputsJson ?? {}) as Record<string, unknown>;
+    const customerMessage = typeof inputs.message === "string" ? inputs.message.trim() || undefined : undefined;
+
+    const itineraryWithMeta = {
+      days: itinerary.days,
+      meta: {
+        summaryParagraph,
+        suggestedPackageSlug,
+        suggestedPackageTitle,
+        customerMessage,
+        aiExplanation: aiExplanation ?? undefined,
+      },
+    };
+
     const invoiceNumber = await nextInvoiceNumber();
     const trackingToken = crypto.randomUUID();
 
@@ -158,7 +216,7 @@ export async function createTripOrder(input: TripOrderCreateInput): Promise<Crea
       paxAdults: input.paxAdults ?? null,
       paxChildren: input.paxChildren ?? null,
       inputsJson: (input.inputsJson ?? {}) as object,
-      itineraryJson: itinerary as object,
+      itineraryJson: itineraryWithMeta as object,
       pricingJson: pricingJson as object,
       currency: pricing.currency,
       totalAmount: totalAmount > 0 ? totalAmount : null,

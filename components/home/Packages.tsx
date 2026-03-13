@@ -30,7 +30,12 @@ function normalizePackages(db: PublicPackage[]): PackageCard[] {
     slug: p.slug,
     duration: `${p.duration_days} Days`,
     price_from: p.price_from,
-    highlights: p.route_summary ? p.route_summary.split(/[–,-]/).map((s) => s.trim()).filter(Boolean).slice(0, 3) : [],
+    highlights:
+      p.highlights?.length > 0
+        ? p.highlights.slice(0, 3)
+        : p.route_summary
+          ? p.route_summary.split(/[–,-]/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
+          : [],
     rating: 4.8,
     image: p.hero_image_url || "/images/placeholder.svg",
     featured: p.is_featured,

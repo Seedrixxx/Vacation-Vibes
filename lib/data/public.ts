@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import type { Destination, Experience, BlogPost, ItineraryDay } from "@/lib/supabase/types";
 import type { PublicPackage } from "@/lib/types/package";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +12,7 @@ export const TAGS = {
   experiences: "experiences",
   packages: "packages",
   blog: "blog",
+  testimonials: "testimonials",
   itinerary: (id: string) => `itinerary-${id}`,
 } as const;
 
@@ -39,6 +41,7 @@ export async function getPackages(options?: {
   return packageRepository.getPackages({
     featured: options?.featured,
     tripType: options?.tripType,
+    destinationId: options?.destinationId,
     limit: options?.limit,
   });
 }
@@ -81,4 +84,26 @@ export async function getDestinationBySlug(slug: string): Promise<Destination | 
   } catch {
     return null;
   }
+}
+
+async function getTestimonialsUncached(): Promise<
+  { id: string; name: string; country: string; rating: number; review: string; image: string | null }[]
+> {
+  try {
+    return await prisma.testimonial.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** Fetch testimonials from Prisma (admin-managed). Cached for 1 hour. */
+export async function getTestimonials(): Promise<
+  { id: string; name: string; country: string; rating: number; review: string; image: string | null }[]
+> {
+  return unstable_cache(getTestimonialsUncached, ["testimonials"], {
+    tags: [TAGS.testimonials],
+    revalidate: 3600,
+  })();
 }

@@ -1,7 +1,6 @@
 export const mainNav = [
   { label: "Home", href: "/" },
   { label: "Tour Packages", href: "/tour-packages" },
-  { label: "Build Your Trip", href: "/build-your-trip" },
   { label: "Services", href: "/services" },
   { label: "About", href: "/about" },
   { label: "Contact us", href: "/contact" },

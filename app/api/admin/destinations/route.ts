@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdminSessionFromHeaders } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { destinationSchema } from "@/lib/validators/destination";
@@ -57,6 +58,10 @@ export async function POST(request: Request) {
         activities: parsed.data.activities,
       },
     });
+    revalidatePath("/");
+    revalidatePath("/packages");
+    revalidatePath(`/destinations/${destination.slug}`);
+    revalidateTag("destinations");
     return NextResponse.json(destination);
   } catch (err) {
     console.error("Destination create error:", err);

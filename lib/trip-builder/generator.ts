@@ -27,8 +27,63 @@ export type PricingResult = {
 };
 
 /**
+ * Map wizard travel_type values to template tag synonyms.
+ * Templates may use tags like "heritage" or "family"; we match them to the wizard's "cultural", "beach", etc.
+ */
+const TRAVEL_TYPE_TAG_SYNONYMS: Record<string, string[]> = {
+  cultural: ["cultural", "heritage", "culture", "history"],
+  beach: ["beach", "relaxation", "coastal", "sea"],
+  adventure: ["adventure", "wildlife", "nature", "safari", "hiking"],
+  luxury: ["luxury", "wellness", "premium", "spa"],
+};
+
+function getEffectiveTagsForInput(travelType: string): Set<string> {
+  const normalized = String(travelType).toLowerCase().trim();
+  const synonyms = TRAVEL_TYPE_TAG_SYNONYMS[normalized];
+  const set = new Set<string>([normalized]);
+  if (synonyms) synonyms.forEach((t) => set.add(t));
+  return set;
+}
+
+/**
+ * Score a template against build inputs for tie-breaking. Higher = better match.
+ * Scoring:
+ * - Travel type / style / interest: +15 if template tag matches (exact or synonym), +8 if any synonym matches.
+ * - interest_slugs: +5 per slug that appears in template tags (exact or case-insensitive).
+ * Assumption: Template tags are stored lowercase; wizard sends travel_type as cultural|beach|adventure|luxury.
+ */
+function scoreTemplateMatch(
+  template: { tags: string[] },
+  inputs: BuildInputs
+): number {
+  let score = 0;
+  const interest = [inputs.interest, inputs.style, inputs.travel_type].find(
+    (v) => typeof v === "string" && v.length > 0
+  ) as string | undefined;
+  if (interest) {
+    const effectiveTags = getEffectiveTagsForInput(interest);
+    const templateTagsLower = new Set((template.tags ?? []).map((t) => t.toLowerCase()));
+    if (templateTagsLower.has(interest.toLowerCase())) {
+      score += 15;
+    } else if ([...effectiveTags].some((t) => templateTagsLower.has(t))) {
+      score += 8;
+    }
+  }
+  const slugs = Array.isArray(inputs.interest_slugs) ? inputs.interest_slugs : [];
+  for (const slug of slugs) {
+    const slugLower = String(slug).toLowerCase();
+    if ((template.tags ?? []).some((t) => t.toLowerCase() === slugLower)) score += 5;
+  }
+  return score;
+}
+
+/**
  * Find best-matching itinerary template by tripType, country, duration.
- * Prefers templates whose tags include the selected interest/style (e.g. family, honeymoon).
+ * 1. Exact duration (durationNights + durationDays) match first.
+ * 2. If none: flexible duration ±1 night/day; pick closest by duration distance.
+ * 3. If still none: flexible ±2 nights/days; pick closest.
+ * 4. When multiple templates: sort by scoreTemplateMatch (travel type/tag overlap), then by id.
+ * Fallback: null (no template) is handled by caller; itinerary becomes empty days.
  */
 export async function selectTemplate(inputs: BuildInputs) {
   const tripType = inputs.tripType ?? null;
@@ -40,26 +95,59 @@ export async function selectTemplate(inputs: BuildInputs) {
 
   if (nights == null || days == null) return null;
 
-  const templates = await prisma.itineraryTemplate.findMany({
-    where: {
-      enabled: true,
-      ...(tripType && { tripType }),
-      ...(country && { country }),
-      durationNights: nights,
-      durationDays: days,
-    },
+  const baseWhere = {
+    enabled: true,
+    ...(tripType && { tripType }),
+    ...(country && { country }),
+  };
+
+  let templates = await prisma.itineraryTemplate.findMany({
+    where: { ...baseWhere, durationNights: nights, durationDays: days },
     orderBy: { id: "asc" },
   });
 
-  const interest = [inputs.interest, inputs.style].find(
-    (v) => typeof v === "string" && v.length > 0
-  ) as string | undefined;
+  const sortByDurationCloseness = (
+    list: { durationNights: number | null; durationDays: number | null }[]
+  ) =>
+    [...list].sort((a, b) => {
+      const da =
+        Math.abs((a.durationNights ?? 0) - nights) + Math.abs((a.durationDays ?? 0) - days);
+      const db =
+        Math.abs((b.durationNights ?? 0) - nights) + Math.abs((b.durationDays ?? 0) - days);
+      return da - db;
+    });
 
-  if (interest && templates.length > 1) {
-    const withTag = templates.find((t) => t.tags.includes(interest));
-    if (withTag) return withTag;
+  if (templates.length === 0) {
+    templates = await prisma.itineraryTemplate.findMany({
+      where: {
+        ...baseWhere,
+        durationNights: { gte: Math.max(0, nights - 1), lte: nights + 1 },
+        durationDays: { gte: Math.max(1, days - 1), lte: days + 1 },
+      },
+      orderBy: [{ durationNights: "asc" }, { durationDays: "asc" }, { id: "asc" }],
+    });
+    templates = sortByDurationCloseness(templates);
   }
-  return templates[0] ?? null;
+
+  if (templates.length === 0) {
+    templates = await prisma.itineraryTemplate.findMany({
+      where: {
+        ...baseWhere,
+        durationNights: { gte: Math.max(0, nights - 2), lte: nights + 2 },
+        durationDays: { gte: Math.max(1, days - 2), lte: days + 2 },
+      },
+      orderBy: [{ durationNights: "asc" }, { durationDays: "asc" }, { id: "asc" }],
+    });
+    templates = sortByDurationCloseness(templates);
+  }
+
+  if (templates.length === 0) return null;
+  if (templates.length === 1) return templates[0];
+
+  const scored = templates
+    .map((t) => ({ template: t, score: scoreTemplateMatch(t, inputs) }))
+    .sort((a, b) => b.score - a.score);
+  return scored[0].template;
 }
 
 const OPTIONAL_SUFFIX = "?optional";

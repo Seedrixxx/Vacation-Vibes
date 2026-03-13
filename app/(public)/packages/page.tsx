@@ -21,14 +21,16 @@ export default async function PackagesPage({
   let packages: PackageDisplay[] = [];
   let destinations: Awaited<ReturnType<typeof getDestinations>> = [];
   try {
-    const [prismaPackages, dests] = await Promise.all([getPackages(), getDestinations()]);
+    const dest = params.destination ? await getDestinationBySlug(params.destination) : null;
+    const [prismaPackages, dests] = await Promise.all([
+      getPackages({
+        destinationId: dest?.id,
+        tripType: params.travel_type === "INBOUND" || params.travel_type === "OUTBOUND" ? params.travel_type : undefined,
+      }),
+      getDestinations(),
+    ]);
     destinations = dests;
     let filtered = [...prismaPackages];
-    if (params.destination) {
-      const dest = await getDestinationBySlug(params.destination);
-      if (dest) filtered = filtered.filter((p) => p.destination_id === dest.id);
-    }
-    if (params.travel_type) filtered = filtered.filter((p) => p.travel_type === params.travel_type);
     if (params.duration) {
       const [min, max] = params.duration === "11+" ? [11, 999] : params.duration.split("-").map(Number);
       filtered = filtered.filter((p) => p.duration_days >= min && (max === undefined || p.duration_days <= max));
@@ -41,6 +43,9 @@ export default async function PackagesPage({
       hero_image_url: p.hero_image_url,
       duration_days: p.duration_days,
       price_from: p.price_from ?? 0,
+      short_description: p.short_description,
+      badge: p.badge,
+      highlights: p.highlights,
     }));
   } catch {
     // no packages

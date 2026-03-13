@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { AdminBlogForm } from "@/components/admin/AdminBlogForm";
 
@@ -18,11 +19,12 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
     const publishedAt =
       !wasPublished && nowPublished ? new Date() : currentPublishedAt;
 
+    const newSlug = formData.get("slug") as string;
     await prisma.blogPost.update({
       where: { id },
       data: {
         title: formData.get("title") as string,
-        slug: formData.get("slug") as string,
+        slug: newSlug,
         excerpt: (formData.get("excerpt") as string) || null,
         content: (formData.get("content") as string) || null,
         heroImageUrl: (formData.get("hero_image_url") as string) || null,
@@ -31,6 +33,10 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
         isPublished: nowPublished,
       },
     });
+    revalidatePath("/blog");
+    revalidatePath(`/blog/${post.slug}`);
+    revalidatePath(`/blog/${newSlug}`);
+    revalidateTag("blog");
     redirect("/admin/blog");
   }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdminSessionFromHeaders } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { destinationSchema } from "@/lib/validators/destination";
@@ -78,6 +79,13 @@ export async function PATCH(
         activities: parsed.data.activities,
       },
     });
+    revalidatePath("/");
+    revalidatePath("/packages");
+    revalidatePath(`/destinations/${existing.slug}`);
+    if (parsed.data.slug !== existing.slug) {
+      revalidatePath(`/destinations/${parsed.data.slug}`);
+    }
+    revalidateTag("destinations");
     return NextResponse.json(destination);
   } catch (err) {
     console.error("Destination update error:", err);
@@ -97,7 +105,12 @@ export async function DELETE(
 
   const { id } = await params;
   try {
+    const existing = await prisma.destination.findUnique({ where: { id }, select: { slug: true } });
     await prisma.destination.delete({ where: { id } });
+    revalidatePath("/");
+    revalidatePath("/packages");
+    if (existing?.slug) revalidatePath(`/destinations/${existing.slug}`);
+    revalidateTag("destinations");
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Destination delete error:", err);

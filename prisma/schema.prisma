@@ -36,9 +36,11 @@ model Destination {
   heroImage    String?
   description  String?
   summary      String?
-  activities   String[]      @default([])
-  createdAt    DateTime      @default(now())
-  experiences  Experience[]
+  activities        String[]             @default([])
+  createdAt         DateTime             @default(now())
+  experiences       Experience[]
+  packagesPrimary   Package[]            @relation("PrimaryDestination")
+  packageRouteStops PackageRouteStop[]
 }
 
 model Testimonial {
@@ -65,16 +67,17 @@ model BlogPost {
 }
 
 model Experience {
-  id            String       @id @default(cuid())
-  name          String
-  slug          String       @unique
-  destinationId String?
-  destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
-  tags          String[]     @default([])
-  priceFrom     Int?
-  imageUrl      String?
-  description   String?
-  createdAt     DateTime     @default(now())
+  id                    String                @id @default(cuid())
+  name                  String
+  slug                  String                @unique
+  destinationId         String?
+  destination           Destination?          @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  tags                  String[]              @default([])
+  priceFrom             Int?
+  imageUrl              String?
+  description           String?
+  createdAt             DateTime              @default(now())
+  packageDayExperiences PackageDayExperience[]
 }
 
 model Inquiry {
@@ -132,12 +135,16 @@ enum TripType {
 enum PackageCtaMode {
   PAY_NOW
   GET_QUOTE
+  BOOK_NOW
+  PAY_DEPOSIT
+  CONTACT_AGENT
 }
 
 enum PackageListItemType {
   HIGHLIGHT
   INCLUSION
   EXCLUSION
+  NOTE
 }
 
 enum DepositType {
@@ -193,45 +200,101 @@ enum PaymentProvider {
 }
 
 model Package {
-  id              String          @id @default(cuid())
-  title           String
-  slug            String          @unique
-  tripType        TripType
-  durationNights Int
-  durationDays    Int
-  summary         String
-  content         String?
-  heroImage       String?
-  gallery         String[]        @default([])
-  tags            String[]        @default([])
-  ctaMode         PackageCtaMode
-  isPublished     Boolean         @default(false)
-  metaTitle       String?
-  metaDescription String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id                    String                 @id @default(cuid())
+  title                 String
+  slug                  String                 @unique
+  tripType              TripType
+  country               String?
+  primaryDestinationId  String?
+  primaryDestination    Destination?           @relation("PrimaryDestination", fields: [primaryDestinationId], references: [id], onDelete: SetNull)
+  durationNights        Int
+  durationDays          Int
+  summary               String
+  shortDescription      String?
+  overview              String?
+  content               String?
+  heroImage             String?
+  gallery               String[]               @default([])
+  tags                  String[]               @default([])
+  featured              Boolean                @default(false)
+  startingPrice         Int?
+  startingPriceCurrency String?                @default("USD")
+  badge                 String?
+  templateEligible      Boolean                @default(false)
+  ctaMode               PackageCtaMode
+  isPublished           Boolean                @default(false)
+  metaTitle             String?
+  metaDescription       String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
   packageDays             PackageDay[]
   packageListItems        PackageListItem[]
-  packagePricingOptions    PackagePricingOption[]
-  tripOrders               TripOrder[]
+  packagePricingOptions   PackagePricingOption[]
+  packageRouteStops       PackageRouteStop[]
+  packageHotelOptions     PackageHotelOption[]
+  tripOrders              TripOrder[]
   @@index([isPublished])
   @@index([isPublished, updatedAt])
+  @@index([primaryDestinationId])
+}
+
+model PackageRouteStop {
+  id             String     @id @default(cuid())
+  packageId      String
+  package        Package    @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  destinationId  String?
+  destination    Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  freeTextLocation String?
+  orderIndex     Int        @default(0)
+  @@index([packageId])
+}
+
+model PackageHotelOption {
+  id         String   @id @default(cuid())
+  packageId  String
+  package    Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  tierName   String?
+  hotelName  String?
+  location   String?
+  category   String?
+  mealPlan   String?
+  roomType   String?
+  dayFrom    Int?
+  dayTo      Int?
+  orderIndex Int      @default(0)
+  @@index([packageId])
 }
 
 model PackageDay {
-  id           String   @id @default(cuid())
-  packageId    String
-  package     Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  dayNumber    Int
-  fromLocation String?
-  toLocation   String?
-  title        String?
-  description  String
-  modules      String[] @default([])
-  isOptional   Boolean  @default(false)
-  dayImage     String?
-  order        Int      @default(0)
+  id              String                  @id @default(cuid())
+  packageId       String
+  package         Package                @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  dayNumber       Int
+  fromLocation    String?
+  toLocation      String?
+  overnightLocation String?
+  title           String?
+  summary         String?
+  description     String
+  meals           String?
+  notes           String?
+  modules         String[]               @default([])
+  isOptional      Boolean                @default(false)
+  dayImage        String?
+  order           Int                    @default(0)
+  dayExperiences  PackageDayExperience[]
   @@index([packageId, order])
+}
+
+model PackageDayExperience {
+  id           String    @id @default(cuid())
+  packageDayId String
+  packageDay   PackageDay @relation(fields: [packageDayId], references: [id], onDelete: Cascade)
+  experienceId String?
+  experience   Experience? @relation(fields: [experienceId], references: [id], onDelete: SetNull)
+  customLabel  String?
+  orderIndex   Int       @default(0)
+  @@index([packageDayId])
 }
 
 model PackageListItem {
@@ -245,19 +308,24 @@ model PackageListItem {
 }
 
 model PackagePricingOption {
-  id           String      @id @default(cuid())
-  packageId    String
-  package      Package     @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  label        String
-  currency     String      @default("USD")
-  basePrice    Int
-  salePrice    Int?
-  depositType  DepositType @default(NONE)
-  depositValue Int?
-  isActive     Boolean     @default(true)
-  notes        String?
+  id            String      @id @default(cuid())
+  packageId     String
+  package       Package     @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  label         String
+  pricingBasis  String?
+  occupancyType String?
+  currency      String      @default("USD")
+  basePrice     Int
+  salePrice     Int?
+  depositType   DepositType @default(NONE)
+  depositValue  Int?
+  quoteOnly     Boolean     @default(false)
+  tierName      String?
+  orderIndex    Int         @default(0)
+  isActive      Boolean     @default(true)
+  notes         String?
   @@index([packageId])
-  tripOrders   TripOrder[]
+  tripOrders    TripOrder[]
 }
 
 model TripBuilderOption {
