@@ -51,6 +51,8 @@ export interface Experience {
   title: string;
   description: string;
   image: string;
+  /** Optional static poster shown by default; GIF fades in on hover */
+  poster?: string;
 }
 
 export const sriLankaExperiences: Experience[] = [
@@ -58,31 +60,36 @@ export const sriLankaExperiences: Experience[] = [
     id: "leopard-safari-yala",
     title: "Leopard Safari in Yala",
     description: "Guided jeep safaris in Sri Lanka's most famous wildlife park.",
-    image: "/images/experiences/wildlife.jpg",
+    image: "/images/experiences/GIF/Lepord safari in yala.gif",
+    poster: "/images/experiences/wildlife.jpg",
   },
   {
     id: "nine-arches-train",
     title: "Nine Arches Bridge & Scenic Train Ride",
     description: "Capture Sri Lanka's iconic railway journey through tea country.",
-    image: "/images/experiences/tea-country.jpg",
+    image: "/images/experiences/GIF/Nine Arches Bridge & Scenic Train Ride.gif",
+    poster: "/images/experiences/tea.jpg",
   },
   {
     id: "sigiriya-rock",
     title: "Sigiriya Rock Climb",
     description: "Climb the ancient rock fortress and witness panoramic island views.",
-    image: "/images/experiences/cultural.jpg",
+    image: "/images/experiences/GIF/sigiriya rock climb.gif",
+    poster: "/images/experiences/cultural.jpg",
   },
   {
     id: "tea-plantation",
     title: "Tea Plantation Visit",
     description: "Walk through Ceylon tea estates and experience traditional tea-making.",
-    image: "/images/experiences/tea-country.jpg",
+    image: "/images/experiences/GIF/Tea Plantation Visit.gif",
+    poster: "/images/experiences/tea-country.jpg",
   },
   {
     id: "southern-beach-sunset",
     title: "Southern Beach Sunset",
     description: "Unwind on Sri Lanka's golden coastline with boutique beach stays.",
-    image: "/images/experiences/beach.jpg",
+    image: "/images/experiences/GIF/Southern Beach Sunset.gif",
+    poster: "/images/experiences/beach.jpg",
   },
   {
     id: "village-cultural",
@@ -91,6 +98,34 @@ export const sriLankaExperiences: Experience[] = [
     image: "/images/experiences/cultural.jpg",
   },
 ];
+
+/**
+ * Map static experiences to the shape expected by TripDesignerWizard (Experience from lib/supabase/types).
+ * Used by Build Your Trip page so it does not need to call the API.
+ */
+export function getStaticExperiencesForTripDesigner(): {
+  id: string;
+  name: string;
+  slug: string;
+  destination_id: string | null;
+  tags: string[];
+  price_from: number | null;
+  image_url: string | null;
+  description: string | null;
+  created_at: string;
+}[] {
+  return sriLankaExperiences.map((e) => ({
+    id: e.id,
+    name: e.title,
+    slug: e.id,
+    destination_id: null,
+    tags: [],
+    price_from: null,
+    image_url: e.image,
+    description: e.description,
+    created_at: new Date().toISOString(),
+  }));
+}
 
 export interface Package {
   id: string;
@@ -211,44 +246,6 @@ export const howItWorksSteps: HowItWorksStep[] = [
   },
 ];
 
-export interface Testimonial {
-  id: string;
-  quote: string;
-  author: string;
-  country: string;
-  avatar: string;
-  featured?: boolean;
-  videoThumbnail?: string;
-}
-
-export const testimonials: Testimonial[] = [
-  {
-    id: "laura-uk",
-    quote:
-      "Our Sri Lanka tour was perfectly organized. Every detail reflected local expertise and genuine care.",
-    author: "Laura S.",
-    country: "United Kingdom",
-    avatar: "/images/testimonials/sarah.jpg",
-    featured: true,
-  },
-  {
-    id: "hassan-uae",
-    quote:
-      "From safari to beach, Vacation Vibes created a seamless Sri Lanka travel experience for us.",
-    author: "Hassan A.",
-    country: "UAE",
-    avatar: "/images/testimonials/sarah.jpg",
-  },
-  {
-    id: "priya-india",
-    quote:
-      "The best Sri Lanka inbound tour company we've worked with — professional and deeply knowledgeable.",
-    author: "Priya N.",
-    country: "India",
-    avatar: "/images/testimonials/sarah.jpg",
-  },
-];
-
 export interface Destination {
   id: string;
   name: string;
@@ -351,6 +348,38 @@ export const footerContact = {
   sriLanka: ["+94 70 715 5960", "+94 70 715 5961"],
   uae: "+971 56 443 8965",
 };
+
+/**
+ * Static testimonials for home page when not loading from API.
+ * Same shape as TestimonialItem in components/home/Testimonials.tsx.
+ */
+export interface TestimonialItem {
+  id: string;
+  name: string;
+  country: string;
+  rating: number;
+  review: string;
+  image: string | null;
+}
+
+export const staticTestimonials: TestimonialItem[] = [
+  {
+    id: "static-1",
+    name: "Sarah & James",
+    country: "UK",
+    rating: 5,
+    review: "Our Sri Lanka trip was beyond expectations. The team tailored every detail—from wildlife safaris to beach stays. We'll be back.",
+    image: null,
+  },
+  {
+    id: "static-2",
+    name: "Maria",
+    country: "Spain",
+    rating: 5,
+    review: "Incredible cultural and natural experiences. Seamless planning and 24/7 support made our honeymoon unforgettable.",
+    image: null,
+  },
+];
 
 /** Official social pages — Facebook & Instagram */
 export const socialLinks = [

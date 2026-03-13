@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Destination } from "@/lib/supabase/types";
 
@@ -24,16 +25,30 @@ function mapToDestination(d: {
   };
 }
 
-export async function getDestinations(): Promise<Destination[]> {
+async function getDestinationsUncached(): Promise<Destination[]> {
   const list = await prisma.destination.findMany({
     orderBy: [{ focusInbound: "desc" }, { name: "asc" }],
   });
   return list.map(mapToDestination);
 }
 
-export async function getDestinationBySlug(slug: string): Promise<Destination | null> {
+export async function getDestinations(): Promise<Destination[]> {
+  return unstable_cache(getDestinationsUncached, ["destinations"], {
+    tags: ["destinations"],
+    revalidate: 3600,
+  })();
+}
+
+async function getDestinationBySlugUncached(slug: string): Promise<Destination | null> {
   const d = await prisma.destination.findUnique({
     where: { slug },
   });
   return d ? mapToDestination(d) : null;
+}
+
+export async function getDestinationBySlug(slug: string): Promise<Destination | null> {
+  return unstable_cache(getDestinationBySlugUncached, ["destination-slug", slug], {
+    tags: ["destinations", `destination-${slug}`],
+    revalidate: 3600,
+  })(slug);
 }

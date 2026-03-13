@@ -6,6 +6,7 @@ import type { PublicPackage } from "@/lib/types/package";
 export type GetPackagesOptions = {
   featured?: boolean;
   tripType?: "INBOUND" | "OUTBOUND";
+  destinationId?: string;
   limit?: number;
 };
 
@@ -14,13 +15,16 @@ async function getPackagesUncached(options?: GetPackagesOptions): Promise<Public
     const list = await prisma.package.findMany({
       where: {
         isPublished: true,
-        ...(options?.featured && { tags: { has: "featured" } }),
+        ...(options?.featured && { OR: [{ featured: true }, { tags: { has: "featured" } }] }),
         ...(options?.tripType && { tripType: options.tripType }),
+        ...(options?.destinationId && { primaryDestinationId: options.destinationId }),
       },
       include: {
         packageDays: { orderBy: { order: "asc" } },
         packageListItems: { orderBy: [{ type: "asc" }, { order: "asc" }] },
-        packagePricingOptions: { where: { isActive: true }, orderBy: { basePrice: "asc" } },
+        packagePricingOptions: { where: { isActive: true }, orderBy: [{ orderIndex: "asc" }, { basePrice: "asc" }] },
+        packageRouteStops: { orderBy: { orderIndex: "asc" }, include: { destination: true } },
+        primaryDestination: true,
       },
       orderBy: [{ updatedAt: "desc" }],
       take: options?.limit ?? 100,
@@ -41,9 +45,12 @@ async function getPackageBySlugUncached(slug: string): Promise<PublicPackage | n
     const pkg = await prisma.package.findFirst({
       where: { slug, isPublished: true },
       include: {
-        packageDays: { orderBy: { order: "asc" } },
+        packageDays: { orderBy: { order: "asc" }, include: { dayExperiences: { include: { experience: true } } } },
         packageListItems: { orderBy: [{ type: "asc" }, { order: "asc" }] },
-        packagePricingOptions: { where: { isActive: true }, orderBy: { basePrice: "asc" } },
+        packagePricingOptions: { where: { isActive: true }, orderBy: [{ orderIndex: "asc" }, { basePrice: "asc" }] },
+        packageRouteStops: { orderBy: { orderIndex: "asc" }, include: { destination: true } },
+        packageHotelOptions: { orderBy: { orderIndex: "asc" } },
+        primaryDestination: true,
       },
     });
     if (!pkg) return null;

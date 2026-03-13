@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdminSessionFromHeaders } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { testimonialSchema } from "@/lib/validators/testimonial";
@@ -44,6 +45,8 @@ export async function POST(request: Request) {
         image: parsed.data.image || null,
       },
     });
+    revalidatePath("/");
+    revalidateTag("testimonials");
     return NextResponse.json(testimonial);
   } catch (err) {
     console.error("Testimonial create error:", err);

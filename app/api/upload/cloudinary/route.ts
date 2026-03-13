@@ -5,22 +5,29 @@ import { requireAdminSessionFromHeaders } from "@/lib/require-admin";
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+function getConfigError(): string | null {
+  const name = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+  const key = process.env.CLOUDINARY_API_KEY?.trim();
+  const secret = process.env.CLOUDINARY_API_SECRET?.trim();
+  if (!name || !key || !secret) return "Cloudinary is not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to .env (get them from the Cloudinary dashboard).";
+  if (name === "your-cloud-name" || key === "your-api-key" || secret === "your-api-secret") return "Replace placeholder Cloudinary values in .env with your real cloud name, API key, and API secret from cloudinary.com.";
+  return null;
+}
 
 export async function POST(request: Request) {
   const auth = await requireAdminSessionFromHeaders();
   if (auth.error) return auth.error;
 
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-    return NextResponse.json(
-      { error: "Cloudinary is not configured" },
-      { status: 503 }
-    );
+  const configError = getConfigError();
+  if (configError) {
+    return NextResponse.json({ error: configError }, { status: 503 });
   }
+
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME!.trim(),
+    api_key: process.env.CLOUDINARY_API_KEY!.trim(),
+    api_secret: process.env.CLOUDINARY_API_SECRET!.trim(),
+  });
 
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
@@ -56,8 +63,12 @@ export async function POST(request: Request) {
               ? JSON.stringify(err)
               : String(err);
     console.error("Cloudinary upload error:", errMessage, err);
+    const userMessage =
+      errMessage && /cloud_name is disabled|invalid.*cloud|cloud.*invalid/i.test(errMessage)
+        ? "Cloudinary cloud name is invalid or disabled. In .env set CLOUDINARY_CLOUD_NAME to your cloud name from the Cloudinary dashboard (Dashboard → Product credentials)."
+        : errMessage || "Upload failed";
     return NextResponse.json(
-      { error: errMessage || "Upload failed" },
+      { error: userMessage },
       { status: 500 }
     );
   }

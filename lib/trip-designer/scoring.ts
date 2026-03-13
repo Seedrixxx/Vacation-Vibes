@@ -10,8 +10,17 @@ export interface TripDesignerInput {
 }
 
 /**
- * Deterministic scoring: higher = better match.
- * Weights: duration (40), travel_type (30), budget_tier (20), featured (10).
+ * Deterministic package scoring for Build Your Trip blueprint (suggested package).
+ * Higher = better match. Used by buildBlueprint to pick the best package for summary/CTA.
+ *
+ * Weights:
+ * - Duration: 40 (exact), 30 (±1 day), 20 (±2), 10 (±4). Outside ±4 = 0.
+ * - travel_type: 30 (exact match with package.travel_type).
+ * - budget_tier: 20 (exact match).
+ * - featured: 10 (package is featured).
+ *
+ * Assumptions: Package has duration_days, travel_type, budget_tier, is_featured from Prisma map.
+ * Limitation: No synonym mapping for travel_type here (packages use same enum as wizard).
  */
 export function scorePackage(pkg: PublicPackage, input: TripDesignerInput): number {
   let score = 0;
@@ -43,6 +52,7 @@ export function sortPackagesByScore(
  * Pick experiences that match the destination of the suggested package
  * and optionally the user's interest slugs. If interest_slugs provided,
  * prefer those; otherwise return top experiences for that destination.
+ * Fallback: experiences with no destination_id are included when destinationId is used.
  */
 export function pickHighlights(
   experiences: Experience[],

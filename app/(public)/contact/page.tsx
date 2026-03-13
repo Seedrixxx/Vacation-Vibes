@@ -4,6 +4,10 @@ import { ContactForm } from "@/components/contact/ContactForm";
 import { footerContact } from "@/lib/homeData";
 import { getWhatsAppLink } from "@/lib/config/nav";
 
+// Static content only; no API calls — load from structured data (homeData, nav config).
+export const runtime = "edge";
+export const dynamic = "force-static";
+
 export const metadata: Metadata = {
   title: "Contact | Vacation Vibez",
   description: "Get in touch for inquiries, trip design, or support.",

@@ -4,14 +4,24 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { testimonials } from "@/lib/homeData";
 import { viewportDefaults } from "@/lib/motion";
+
+export type TestimonialItem = {
+  id: string;
+  name: string;
+  country: string;
+  rating: number;
+  review: string;
+  image: string | null;
+};
+
+const PLACEHOLDER_AVATAR = "/images/placeholder.svg";
 
 function TestimonialCard({
   testimonial,
   featured = false,
 }: {
-  testimonial: (typeof testimonials)[0];
+  testimonial: TestimonialItem;
   featured?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
@@ -37,12 +47,12 @@ function TestimonialCard({
         <blockquote
           className={`font-serif leading-relaxed text-charcoal ${featured ? "text-lg lg:text-xl" : "text-base"}`}
         >
-          &ldquo;{testimonial.quote}&rdquo;
+          &ldquo;{testimonial.review}&rdquo;
         </blockquote>
         <div className="mt-6 flex items-center gap-3">
           <div className="relative h-12 w-12 overflow-hidden rounded-full bg-sand">
             <Image
-              src={testimonial.avatar}
+              src={testimonial.image || PLACEHOLDER_AVATAR}
               alt=""
               fill
               className="object-cover"
@@ -50,7 +60,7 @@ function TestimonialCard({
             />
           </div>
           <div>
-            <p className="font-medium text-charcoal">{testimonial.author}</p>
+            <p className="font-medium text-charcoal">{testimonial.name}</p>
             <p className="text-sm text-charcoal/60">{testimonial.country}</p>
           </div>
         </div>
@@ -59,9 +69,11 @@ function TestimonialCard({
   );
 }
 
-export function Testimonials() {
-  const featured = testimonials.find((t) => t.featured);
-  const others = testimonials.filter((t) => !t.featured);
+export function Testimonials({ testimonials }: { testimonials: TestimonialItem[] }) {
+  const featured = testimonials[0] ?? null;
+  const others = testimonials.slice(1);
+
+  if (testimonials.length === 0) return null;
 
   return (
     <section

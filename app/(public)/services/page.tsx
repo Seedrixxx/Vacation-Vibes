@@ -2,8 +2,9 @@ import { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 
-// Static content only; edge for fast cold start.
+// Static content only; no API calls — load instantly from structured data.
 export const runtime = "edge";
+export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Services | Vacation Vibez",

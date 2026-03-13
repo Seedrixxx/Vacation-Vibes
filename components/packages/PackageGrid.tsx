@@ -40,6 +40,11 @@ export function PackageGrid({
                 sizes="(max-width: 768px) 100vw, 33vw"
               />
             </Link>
+            {pkg.badge && (
+              <span className="absolute top-2 left-2 rounded bg-charcoal/80 px-2 py-0.5 text-xs font-medium text-white">
+                {pkg.badge}
+              </span>
+            )}
           </div>
           <div className="p-6">
             <div className="flex items-start justify-between gap-2">
@@ -50,6 +55,11 @@ export function PackageGrid({
                 {pkg.duration_days} days
               </span>
             </div>
+            {(pkg.short_description ?? pkg.highlights?.length) ? (
+              <p className="mt-2 line-clamp-2 text-sm text-charcoal/60">
+                {pkg.short_description ?? (pkg.highlights?.slice(0, 2).join(" · ") ?? "")}
+              </p>
+            ) : null}
             <p className="mt-2 text-charcoal/60">From ${pkg.price_from.toLocaleString()} / person</p>
             <div className="mt-4 flex gap-2">
               <Button as="a" href={`/packages/${pkg.slug}`} size="sm" variant="outline">
