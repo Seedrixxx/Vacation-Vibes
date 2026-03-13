@@ -95,7 +95,8 @@ export const sriLankaExperiences: Experience[] = [
     id: "village-cultural",
     title: "Village & Cultural Immersion",
     description: "Connect with local life through authentic Sri Lankan village experiences.",
-    image: "/images/experiences/cultural.jpg",
+    image: "/images/experiences/GIF/cultural.gif",
+    poster: "/images/experiences/Village_cultural_immersion_in_sri_lanka_bb08700005.jpeg",
   },
 ];
 
