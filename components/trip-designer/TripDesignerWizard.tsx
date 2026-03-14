@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import clsx from "clsx";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import type { Experience } from "@/lib/supabase/types";
+import type { PackageMatchResult } from "@/lib/trip-designer/package-match";
 
 const STEP_EASE = [0.25, 0.1, 0.25, 1] as const;
 const STEP_DURATION = 0.35;
@@ -23,12 +24,11 @@ const STAGGER_ITEM = {
   },
 };
 
-const TRAVEL_TYPES = [
-  { value: "cultural", label: "Cultural & heritage" },
-  { value: "beach", label: "Beach & relaxation" },
-  { value: "adventure", label: "Adventure & wildlife" },
-  { value: "luxury", label: "Luxury & wellness" },
-];
+/** Step 1 — Country options (extensible for admin/DB later) */
+const COUNTRIES = [
+  { value: "Sri Lanka", label: "Sri Lanka" },
+  { value: "Beyond Sri Lanka", label: "Beyond Sri Lanka" },
+] as const;
 
 const DURATIONS = [
   { value: 5, label: "5 days" },
@@ -37,71 +37,216 @@ const DURATIONS = [
   { value: 14, label: "14 days" },
 ];
 
+/** Step 4 — Experience focus (multi-select); slugs align with package tags where possible */
+const EXPERIENCE_OPTIONS = [
+  { value: "cultural", label: "Cultural" },
+  { value: "beach", label: "Beach" },
+  { value: "adventure", label: "Adventure" },
+  { value: "wildlife", label: "Wildlife" },
+  { value: "wellness", label: "Wellness" },
+  { value: "nature", label: "Nature" },
+  { value: "food", label: "Food" },
+  { value: "luxury", label: "Luxury" },
+  { value: "family-friendly", label: "Family-friendly" },
+  { value: "relaxation", label: "Relaxation" },
+];
+
+/** Step 5 — Travel style */
+const TRAVEL_STYLES = [
+  { value: "cultural", label: "Cultural & Heritage" },
+  { value: "beach", label: "Beach Escape" },
+  { value: "adventure", label: "Adventure" },
+  { value: "luxury", label: "Luxury" },
+  { value: "family", label: "Family" },
+  { value: "relaxed", label: "Relaxed" },
+  { value: "wellness", label: "Wellness" },
+];
+
 const BUDGET_TIERS = [
   { value: "mid", label: "Mid-range" },
   { value: "luxury", label: "Luxury" },
 ];
 
-const TRAVEL_TYPE_LABELS: Record<string, string> = {
-  cultural: "Cultural & heritage",
-  beach: "Beach & relaxation",
-  adventure: "Adventure & wildlife",
-  luxury: "Luxury & wellness",
-};
+const TRAVEL_STYLE_LABELS: Record<string, string> = Object.fromEntries(
+  TRAVEL_STYLES.map((s) => [s.value, s.label])
+);
+const EXPERIENCE_LABELS: Record<string, string> = Object.fromEntries(
+  EXPERIENCE_OPTIONS.map((e) => [e.value, e.label])
+);
+
+const totalSteps = 6;
 
 export function TripDesignerWizard({ experiences = [] }: { experiences?: Experience[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reduceMotion = useReducedMotion();
+
   const [step, setStep] = useState(1);
   const [stepDirection, setStepDirection] = useState(0);
-  const [travelType, setTravelType] = useState(searchParams.get("travel_type") ?? "");
-  const [duration, setDuration] = useState<number>(Number(searchParams.get("duration")) || 7);
-  const [interestSlugs, setInterestSlugs] = useState<string[]>(() => {
+
+  const [country, setCountry] = useState(() => {
+    const c = searchParams.get("country");
+    if (c && COUNTRIES.some((o) => o.value === c)) return c;
+    return "";
+  });
+  const [outboundCountry, setOutboundCountry] = useState(() => {
+    if (country !== "Beyond Sri Lanka") return "";
+    const oc = searchParams.get("outbound_country");
+    return oc?.trim() ?? "";
+  });
+  const [outboundCountries, setOutboundCountries] = useState<string[]>([]);
+  const [outboundCountriesLoading, setOutboundCountriesLoading] = useState(false);
+
+  const tripType = useMemo(
+    () => (country === "Sri Lanka" ? "INBOUND" : "OUTBOUND"),
+    [country]
+  );
+  /** Real destination country for matching and proposal (never "Beyond Sri Lanka"). */
+  const realCountry = useMemo(
+    () => (country === "Sri Lanka" ? "Sri Lanka" : (outboundCountry || "")),
+    [country, outboundCountry]
+  );
+
+  const [duration, setDuration] = useState<number>(
+    Number(searchParams.get("duration")) || 7
+  );
+  const durationDays = duration;
+  const durationNights = duration - 1;
+
+  const [paxAdults, setPaxAdults] = useState(1);
+  const [hasChildren, setHasChildren] = useState(false);
+  const [paxChildren, setPaxChildren] = useState(0);
+  const [hasSeniors, setHasSeniors] = useState(false);
+  const [paxSeniors, setPaxSeniors] = useState(0);
+
+  const [selectedExperiences, setSelectedExperiences] = useState<string[]>(() => {
     const exp = searchParams.get("experience");
     if (!exp) return [];
+    if (EXPERIENCE_OPTIONS.some((e) => e.value === exp)) return [exp];
     return experiences.some((e) => e.slug === exp) ? [exp] : [];
   });
+  const [travelStyle, setTravelStyle] = useState(() => {
+    const t = searchParams.get("travel_type");
+    if (t && TRAVEL_STYLES.some((s) => s.value === t)) return t;
+    return "";
+  });
   const [budgetTier, setBudgetTier] = useState(searchParams.get("budget") ?? "mid");
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [matchedPackages, setMatchedPackages] = useState<PackageMatchResult[]>([]);
+  const [matchLoading, setMatchLoading] = useState(false);
+  const [matchError, setMatchError] = useState<string | null>(null);
+  const [selectedMatchedPackage, setSelectedMatchedPackage] =
+    useState<PackageMatchResult | null>(null);
+  const bestMatch = matchedPackages[0] ?? null;
+
   const packageSlug = searchParams.get("package") ?? undefined;
   const destinationSlug = searchParams.get("destination") ?? undefined;
 
-  const totalSteps = 5;
+  useEffect(() => {
+    if (country !== "Beyond Sri Lanka") return;
+    if (outboundCountries.length > 0) return;
+    setOutboundCountriesLoading(true);
+    fetch("/api/build-trip/outbound-countries")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.countries)) setOutboundCountries(data.countries);
+      })
+      .catch(() => setOutboundCountries([]))
+      .finally(() => setOutboundCountriesLoading(false));
+  }, [country, outboundCountries.length]);
+
+  useEffect(() => {
+    if (step !== 6 || !realCountry || !tripType) return;
+    const payload = {
+      country: realCountry,
+      tripType,
+      durationDays,
+      durationNights,
+      paxAdults,
+      paxChildren: hasChildren ? paxChildren : 0,
+      hasSeniors,
+      paxSeniors: hasSeniors ? paxSeniors : 0,
+      selectedExperiences,
+      travelStyle: travelStyle || undefined,
+      budgetTier,
+    };
+    const timer = setTimeout(() => {
+      setMatchLoading(true);
+      setMatchError(null);
+      fetch("/api/trip-package-match", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.matches) setMatchedPackages(data.matches);
+          else setMatchedPackages([]);
+        })
+        .catch(() => {
+          setMatchError("Could not load package suggestions");
+          setMatchedPackages([]);
+        })
+        .finally(() => setMatchLoading(false));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [
+    step,
+    realCountry,
+    tripType,
+    durationDays,
+    durationNights,
+    paxAdults,
+    hasChildren,
+    paxChildren,
+    hasSeniors,
+    paxSeniors,
+    selectedExperiences,
+    travelStyle,
+    budgetTier,
+  ]);
 
   const goToStep = (next: number) => {
     setStepDirection(next > step ? 1 : -1);
     setStep(next);
   };
 
-  const toggleInterest = (slug: string) => {
-    setInterestSlugs((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+  const toggleExperience = (value: string) => {
+    setSelectedExperiences((prev) =>
+      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value]
     );
   };
 
-  const handleSubmitContact = async () => {
+  const interestSlugs = selectedExperiences;
+  const travelType = travelStyle;
+
+  const handleSubmitCustomTrip = async () => {
     setSubmitting(true);
     const messageTrimmed = message.trim() || undefined;
     const inputsJson = {
-      travel_type: travelType,
-      style: travelType || undefined,
-      interest: travelType || undefined,
-      duration_days: duration,
-      durationNights: duration - 1,
-      durationDays: duration,
+      country: realCountry,
+      tripType,
+      travel_type: travelStyle || undefined,
+      style: travelStyle || undefined,
+      interest: travelStyle || undefined,
       interest_slugs: interestSlugs,
       budget_tier: budgetTier,
-      country: "Sri Lanka",
-      tripType: "INBOUND",
+      duration_days: durationDays,
+      durationNights,
+      durationDays,
       package_slug: packageSlug ?? undefined,
       destination: destinationSlug ?? undefined,
       message: messageTrimmed,
+      paxAdults,
+      paxChildren: hasChildren ? paxChildren : 0,
+      hasSeniors,
+      ...(hasSeniors && { paxSeniors }),
     };
     try {
       const res = await fetch("/api/trip-orders", {
@@ -112,17 +257,21 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
           customerFullName: fullName.trim(),
           customerEmail: email.trim(),
           customerWhatsapp: whatsapp.trim() || null,
-          tripType: "INBOUND",
-          country: "Sri Lanka",
-          durationNights: duration - 1,
-          durationDays: duration,
+          tripType,
+          country: realCountry || null,
+          durationNights,
+          durationDays,
+          paxAdults,
+          paxChildren: hasChildren ? paxChildren : 0,
           inputsJson,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to create trip order");
       toast.success("Trip request created!");
-      router.push(`/build-your-trip/result?invoice=${encodeURIComponent(data.invoiceNumber)}`);
+      router.push(
+        `/build-your-trip/result?invoice=${encodeURIComponent(data.invoiceNumber)}`
+      );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to submit");
     } finally {
@@ -145,18 +294,24 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
           Build your trip
         </h1>
         <p className="mt-2 text-charcoal/70">
-          Answer a few quick questions and we’ll create a personalized Trip Blueprint—route, experiences, and next steps. No commitment until you’re ready.
+          Answer a few quick questions and we&apos;ll create a personalized Trip
+          Blueprint—route, experiences, and next steps. No commitment until
+          you&apos;re ready.
         </p>
-        {(searchParams.get("package") || searchParams.get("destination") || searchParams.get("experience")) && (
+        {(searchParams.get("package") ||
+          searchParams.get("destination") ||
+          searchParams.get("experience")) && (
           <p className="mt-1 text-sm text-teal/90">
-            You’re building from a selection—we’ll tailor your blueprint accordingly.
+            You&apos;re building from a selection—we&apos;ll tailor your
+            blueprint accordingly.
           </p>
         )}
 
-        {/* Progress bar */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-sm text-charcoal/60">
-            <span>Step {step} of {totalSteps}</span>
+            <span>
+              Step {step} of {totalSteps}
+            </span>
           </div>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-charcoal/10">
             <motion.div
@@ -178,48 +333,96 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: reduceMotion ? 0 : STEP_DURATION, ease: STEP_EASE }}
+            transition={{
+              duration: reduceMotion ? 0 : STEP_DURATION,
+              ease: STEP_EASE,
+            }}
             className="mt-8"
           >
+            {/* Step 1 — Country */}
             {step === 1 && (
               <>
-                <h2 className="font-medium text-charcoal">What’s the main focus of your trip?</h2>
+                <h2 className="font-medium text-charcoal">
+                  Where do you want to go?
+                </h2>
                 <p className="mt-1 text-sm text-charcoal/70">
-                  This helps us suggest the right experiences and pace for your journey.
+                  We&apos;ll tailor packages and itineraries to your destination.
                 </p>
                 <motion.div
                   className="mt-3 flex flex-wrap gap-2"
-                  variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }}
+                  variants={{
+                    visible: {
+                      transition: {
+                        staggerChildren: reduceMotion ? 0 : 0.06,
+                      },
+                    },
+                  }}
                   initial="hidden"
                   animate="visible"
                 >
-                  {TRAVEL_TYPES.map((t) => (
+                  {COUNTRIES.map((c) => (
                     <OptionChip
-                      key={t.value}
-                      label={t.label}
-                      selected={travelType === t.value}
-                      onSelect={() => setTravelType(t.value)}
+                      key={c.value}
+                      label={c.label}
+                      selected={country === c.value}
+                      onSelect={() => setCountry(c.value)}
                       reduceMotion={!!reduceMotion}
                     />
                   ))}
                 </motion.div>
+                {country === "Beyond Sri Lanka" && (
+                  <div className="mt-4">
+                    <Label htmlFor="outbound-country" className="text-charcoal/80">
+                      Select destination
+                    </Label>
+                    {outboundCountriesLoading ? (
+                      <p className="mt-2 text-sm text-charcoal/60">Loading destinations…</p>
+                    ) : (
+                      <select
+                        id="outbound-country"
+                        value={outboundCountry}
+                        onChange={(e) => setOutboundCountry(e.target.value)}
+                        className="mt-2 w-full rounded-lg border border-charcoal/20 bg-white px-3 py-2 text-charcoal focus:border-teal focus:outline-none focus:ring-1 focus:ring-teal"
+                      >
+                        <option value="">Choose a country</option>
+                        {outboundCountries.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
                 <div className="mt-8 flex justify-end">
-                  <Button onClick={() => goToStep(2)} disabled={!travelType}>
+                  <Button
+                    onClick={() => goToStep(2)}
+                    disabled={!country || (country === "Beyond Sri Lanka" && !outboundCountry)}
+                  >
                     Next
                   </Button>
                 </div>
               </>
             )}
 
+            {/* Step 2 — Duration */}
             {step === 2 && (
               <>
-                <h2 className="font-medium text-charcoal">How long do you have?</h2>
+                <h2 className="font-medium text-charcoal">
+                  How long is your trip?
+                </h2>
                 <p className="mt-1 text-sm text-charcoal/70">
-                  We’ll design a route that fits your timeline.
+                  We&apos;ll design a route that fits your timeline.
                 </p>
                 <motion.div
                   className="mt-3 flex flex-wrap gap-2"
-                  variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }}
+                  variants={{
+                    visible: {
+                      transition: {
+                        staggerChildren: reduceMotion ? 0 : 0.06,
+                      },
+                    },
+                  }}
                   initial="hidden"
                   animate="visible"
                 >
@@ -242,28 +445,91 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
               </>
             )}
 
+            {/* Step 3 — Party composition */}
             {step === 3 && (
               <>
-                <h2 className="font-medium text-charcoal">Any must-do experiences?</h2>
+                <h2 className="font-medium text-charcoal">
+                  Who&apos;s travelling?
+                </h2>
                 <p className="mt-1 text-sm text-charcoal/70">
-                  Optional—pick a few or skip; we’ll still tailor your trip.
+                  This helps us recommend suitable packages and pricing.
                 </p>
-                <motion.div
-                  className="mt-3 flex flex-wrap gap-2"
-                  variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.04 } } }}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {experiences.map((e) => (
-                    <OptionChip
-                      key={e.id}
-                      label={e.name}
-                      selected={interestSlugs.includes(e.slug)}
-                      onSelect={() => toggleInterest(e.slug)}
-                      reduceMotion={!!reduceMotion}
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <Label htmlFor="paxAdults">Adults *</Label>
+                    <Input
+                      id="paxAdults"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={paxAdults}
+                      onChange={(e) =>
+                        setPaxAdults(Math.max(1, parseInt(e.target.value, 10) || 1))
+                      }
+                      className="mt-1 w-24"
                     />
-                  ))}
-                </motion.div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="hasChildren"
+                      checked={hasChildren}
+                      onChange={(e) => setHasChildren(e.target.checked)}
+                      className="h-4 w-4 rounded border-charcoal/20"
+                    />
+                    <Label htmlFor="hasChildren" className="cursor-pointer">
+                      Travelling with children
+                    </Label>
+                  </div>
+                  {hasChildren && (
+                    <div>
+                      <Label htmlFor="paxChildren">Number of children</Label>
+                      <Input
+                        id="paxChildren"
+                        type="number"
+                        min={0}
+                        max={10}
+                        value={paxChildren}
+                        onChange={(e) =>
+                          setPaxChildren(
+                            Math.max(0, parseInt(e.target.value, 10) || 0)
+                          )
+                        }
+                        className="mt-1 w-24"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="hasSeniors"
+                      checked={hasSeniors}
+                      onChange={(e) => setHasSeniors(e.target.checked)}
+                      className="h-4 w-4 rounded border-charcoal/20"
+                    />
+                    <Label htmlFor="hasSeniors" className="cursor-pointer">
+                      Any travellers 55+?
+                    </Label>
+                  </div>
+                  {hasSeniors && (
+                    <div>
+                      <Label htmlFor="paxSeniors">Number of 55+ travellers</Label>
+                      <Input
+                        id="paxSeniors"
+                        type="number"
+                        min={0}
+                        max={10}
+                        value={paxSeniors}
+                        onChange={(e) =>
+                          setPaxSeniors(
+                            Math.max(0, parseInt(e.target.value, 10) || 0)
+                          )
+                        }
+                        className="mt-1 w-24"
+                      />
+                    </div>
+                  )}
+                </div>
                 <div className="mt-8 flex justify-between">
                   <Button variant="outline" onClick={() => goToStep(2)}>
                     Back
@@ -273,24 +539,34 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
               </>
             )}
 
+            {/* Step 4 — Experience focus */}
             {step === 4 && (
               <>
-                <h2 className="font-medium text-charcoal">What’s your budget comfort?</h2>
+                <h2 className="font-medium text-charcoal">
+                  What sort of experiences do you want?
+                </h2>
                 <p className="mt-1 text-sm text-charcoal/70">
-                  We’ll suggest options that match—you can always refine later.
+                  Multi-select—pick a few or skip; we&apos;ll still tailor your
+                  trip.
                 </p>
                 <motion.div
                   className="mt-3 flex flex-wrap gap-2"
-                  variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }}
+                  variants={{
+                    visible: {
+                      transition: {
+                        staggerChildren: reduceMotion ? 0 : 0.04,
+                      },
+                    },
+                  }}
                   initial="hidden"
                   animate="visible"
                 >
-                  {BUDGET_TIERS.map((b) => (
+                  {EXPERIENCE_OPTIONS.map((e) => (
                     <OptionChip
-                      key={b.value}
-                      label={b.label}
-                      selected={budgetTier === b.value}
-                      onSelect={() => setBudgetTier(b.value)}
+                      key={e.value}
+                      label={e.label}
+                      selected={selectedExperiences.includes(e.value)}
+                      onSelect={() => toggleExperience(e.value)}
                       reduceMotion={!!reduceMotion}
                     />
                   ))}
@@ -304,23 +580,169 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
               </>
             )}
 
+            {/* Step 5 — Travel style + budget */}
             {step === 5 && (
+              <>
+                <h2 className="font-medium text-charcoal">
+                  Travel style & budget
+                </h2>
+                <p className="mt-1 text-sm text-charcoal/70">
+                  We&apos;ll suggest options that match—you can refine later.
+                </p>
+                <div className="mt-4">
+                  <Label className="text-charcoal/80">Travel style</Label>
+                  <motion.div
+                    className="mt-2 flex flex-wrap gap-2"
+                    variants={{
+                      visible: {
+                        transition: {
+                          staggerChildren: reduceMotion ? 0 : 0.05,
+                        },
+                      },
+                    }}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    {TRAVEL_STYLES.map((s) => (
+                      <OptionChip
+                        key={s.value}
+                        label={s.label}
+                        selected={travelStyle === s.value}
+                        onSelect={() => setTravelStyle(s.value)}
+                        reduceMotion={!!reduceMotion}
+                      />
+                    ))}
+                  </motion.div>
+                </div>
+                <div className="mt-4">
+                  <Label className="text-charcoal/80">Budget</Label>
+                  <motion.div
+                    className="mt-2 flex flex-wrap gap-2"
+                    variants={{
+                      visible: {
+                        transition: {
+                          staggerChildren: reduceMotion ? 0 : 0.06,
+                        },
+                      },
+                    }}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    {BUDGET_TIERS.map((b) => (
+                      <OptionChip
+                        key={b.value}
+                        label={b.label}
+                        selected={budgetTier === b.value}
+                        onSelect={() => setBudgetTier(b.value)}
+                        reduceMotion={!!reduceMotion}
+                      />
+                    ))}
+                  </motion.div>
+                </div>
+                <div className="mt-8 flex justify-between">
+                  <Button variant="outline" onClick={() => goToStep(4)}>
+                    Back
+                  </Button>
+                  <Button onClick={() => goToStep(6)}>Next</Button>
+                </div>
+              </>
+            )}
+
+            {/* Step 6 — Contact + summary (+ optional match card) */}
+            {step === 6 && !selectedMatchedPackage && (
               <div className="space-y-4">
-                <h2 className="font-medium text-charcoal">Almost there—how can we reach you?</h2>
+                {matchLoading && (
+                  <p className="text-sm text-charcoal/60">
+                    Checking for matching packages…
+                  </p>
+                )}
+                {!matchLoading && bestMatch && (
+                  <div className="rounded-xl border border-teal/20 bg-teal/5 p-4 sm:p-5">
+                    <p className="font-medium text-charcoal">
+                      This itinerary already matches most of what you&apos;re looking for.
+                    </p>
+                    <p className="mt-1 text-sm text-charcoal/70">
+                      You can book it directly, customize it, or continue building your own trip.
+                    </p>
+                    <p className="mt-2 font-medium text-charcoal/90">
+                      {bestMatch.packageName}
+                      {bestMatch.country && ` · ${bestMatch.country}`}
+                      {bestMatch.durationDays != null && ` · ${bestMatch.durationDays} days`}
+                      {bestMatch.priceFrom != null &&
+                        ` · From $${bestMatch.priceFrom.toLocaleString()}`}
+                    </p>
+                    <p className="mt-0.5 text-sm text-charcoal/60">
+                      Match: {bestMatch.matchScore}%
+                    </p>
+                    {bestMatch.matchReasons.length > 0 && (
+                      <ul className="mt-2 list-inside list-disc text-sm text-charcoal/70">
+                        {bestMatch.matchReasons.slice(0, 3).map((r, i) => (
+                          <li key={i}>{r}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className="mt-4 flex flex-wrap gap-2 items-center">
+                      <Button
+                        as="a"
+                        href={`/packages/${bestMatch.packageSlug}`}
+                        size="sm"
+                        variant="primary"
+                      >
+                        View itinerary
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSelectedMatchedPackage(bestMatch)}
+                      >
+                        Customize this package
+                      </Button>
+                      <span className="flex items-center text-sm text-charcoal/60">
+                        or continue below to build your own trip
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {!matchLoading && matchError && (
+                  <p className="text-sm text-charcoal/60">{matchError}</p>
+                )}
+                <h2 className="font-medium text-charcoal">
+                  Almost there—how can we reach you?
+                </h2>
                 <p className="text-sm text-charcoal/70">
-                  We’ll create your personalized Trip Blueprint and send it to this email. You can then confirm details or pay a deposit—no commitment until you’re ready.
+                  We&apos;ll create your personalized Trip Blueprint and send it
+                  to this email. You can then confirm details or pay a
+                  deposit—no commitment until you&apos;re ready.
                 </p>
                 <div className="rounded-lg border border-charcoal/10 bg-charcoal/[0.03] px-4 py-3 text-sm text-charcoal/80">
                   <p className="font-medium text-charcoal/90">Your selections</p>
                   <ul className="mt-1 list-inside list-disc space-y-0.5">
-                    <li>{(TRAVEL_TYPE_LABELS[travelType] ?? travelType) || "—"}</li>
-                    <li>{duration} days</li>
-                    <li>Budget: {budgetTier === "luxury" ? "Luxury" : "Mid-range"}</li>
-                    {interestSlugs.length > 0 && (
+                    <li>Destination: {realCountry || "—"}</li>
+                    <li>Duration: {duration} days</li>
+                    <li>Adults: {paxAdults}</li>
+                    <li>Children: {hasChildren ? paxChildren : 0}</li>
+                    <li>55+ travellers: {hasSeniors ? "Yes" : "No"}</li>
+                    {selectedExperiences.length > 0 && (
                       <li>
-                        Interests: {interestSlugs.slice(0, 3).map((s) => experiences.find((e) => e.slug === s)?.name ?? s).join(", ")}
-                        {interestSlugs.length > 3 ? "…" : ""}
+                        Experiences:{" "}
+                        {selectedExperiences
+                          .slice(0, 4)
+                          .map((s) => EXPERIENCE_LABELS[s] ?? s)
+                          .join(", ")}
+                        {selectedExperiences.length > 4 ? "…" : ""}
                       </li>
+                    )}
+                    <li>
+                      Style:{" "}
+                      {(TRAVEL_STYLE_LABELS[travelStyle] ?? travelStyle) || "—"}
+                    </li>
+                    <li>
+                      Budget:{" "}
+                      {budgetTier === "luxury" ? "Luxury" : "Mid-range"}
+                    </li>
+                    {message.trim() && (
+                      <li>Message: {message.trim().slice(0, 50)}…</li>
                     )}
                   </ul>
                 </div>
@@ -358,7 +780,9 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="message">Anything else we should know? (optional)</Label>
+                  <Label htmlFor="message">
+                    Anything else we should know? (optional)
+                  </Label>
                   <Textarea
                     id="message"
                     value={message}
@@ -369,17 +793,50 @@ export function TripDesignerWizard({ experiences = [] }: { experiences?: Experie
                   />
                 </div>
                 <div className="mt-8 flex justify-between">
-                  <Button variant="outline" onClick={() => goToStep(4)}>
+                  <Button variant="outline" onClick={() => goToStep(5)}>
                     Back
                   </Button>
                   <Button
-                    onClick={handleSubmitContact}
-                    disabled={submitting || !fullName.trim() || !email.trim()}
+                    onClick={handleSubmitCustomTrip}
+                    disabled={
+                      submitting || !fullName.trim() || !email.trim()
+                    }
                   >
-                    {submitting ? "Creating your blueprint…" : "Get my Trip Blueprint"}
+                    {submitting
+                      ? "Creating your blueprint…"
+                      : "Get my Trip Blueprint"}
                   </Button>
                 </div>
               </div>
+            )}
+
+            {/* Step 6 — Customization form (when user chose "Customize this package") */}
+            {step === 6 && selectedMatchedPackage && (
+              <PackageCustomizationForm
+                match={selectedMatchedPackage}
+                builderSummary={{
+                  country: realCountry,
+                  duration,
+                  paxAdults,
+                  paxChildren: hasChildren ? paxChildren : 0,
+                  hasSeniors,
+                  paxSeniors: hasSeniors ? paxSeniors : undefined,
+                  selectedExperiences,
+                  travelStyle,
+                  budgetTier,
+                }}
+                fullName={fullName}
+                email={email}
+                whatsapp={whatsapp}
+                onBack={() => setSelectedMatchedPackage(null)}
+                onSuccess={(proposalId) => {
+                  setSelectedMatchedPackage(null);
+                  toast.success("Your proposal is ready!");
+                  if (proposalId) {
+                    router.push(`/build-your-trip/result?proposal=${encodeURIComponent(proposalId)}`);
+                  }
+                }}
+              />
             )}
           </motion.div>
         </AnimatePresence>
@@ -417,5 +874,185 @@ function OptionChip({
     >
       {label}
     </motion.button>
+  );
+}
+
+/** Builder summary passed to customization form */
+interface BuilderSummary {
+  country: string;
+  duration: number;
+  paxAdults: number;
+  paxChildren: number;
+  hasSeniors: boolean;
+  paxSeniors?: number;
+  selectedExperiences: string[];
+  travelStyle: string;
+  budgetTier: string;
+}
+
+function PackageCustomizationForm({
+  match,
+  builderSummary,
+  fullName: initialFullName,
+  email: initialEmail,
+  whatsapp: initialWhatsapp,
+  onBack,
+  onSuccess,
+}: {
+  match: PackageMatchResult;
+  builderSummary: BuilderSummary;
+  fullName: string;
+  email: string;
+  whatsapp: string;
+  onBack: () => void;
+  onSuccess: (proposalId?: string) => void;
+}) {
+  const [customMessage, setCustomMessage] = useState("");
+  const [fullName, setFullName] = useState(initialFullName);
+  const [email, setEmail] = useState(initialEmail);
+  const [whatsapp, setWhatsapp] = useState(initialWhatsapp);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hotelUpgrade, setHotelUpgrade] = useState(false);
+  const [seniorPacing, setSeniorPacing] = useState(false);
+  const [budgetChange, setBudgetChange] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/build-trip/customization-proposal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packageId: match.packageId,
+          packageSlug: match.packageSlug,
+          packageName: match.packageName,
+          matchScore: match.matchScore,
+          builderInputsJson: {
+            ...builderSummary,
+            paxSeniors: builderSummary.hasSeniors ? builderSummary.paxSeniors : undefined,
+          },
+          requestedChangesJson: {
+            message: customMessage.trim() || undefined,
+            hotelUpgrade,
+            seniorFriendlyPacing: seniorPacing,
+            budgetChange: budgetChange.trim() || undefined,
+          },
+          customerFullName: fullName.trim(),
+          customerEmail: email.trim(),
+          customerWhatsapp: whatsapp.trim() || null,
+          message: customMessage.trim() || null,
+          source: "BUILD_TRIP",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to submit");
+      onSuccess(data.proposalId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-charcoal/70">
+        Customize: <strong>{match.packageName}</strong> ({match.matchScore}%
+        match)
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="customMessage">
+            What would you like to change? *
+          </Label>
+          <Textarea
+            id="customMessage"
+            value={customMessage}
+            onChange={(e) => setCustomMessage(e.target.value)}
+            placeholder="e.g. add a wildlife safari day, upgrade hotels, adjust for children..."
+            rows={4}
+            className="mt-1 w-full"
+            required
+          />
+        </div>
+        <div className="space-y-2 text-sm text-charcoal/70">
+          <p className="font-medium text-charcoal/80">Optional adjustments</p>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={hotelUpgrade}
+              onChange={(e) => setHotelUpgrade(e.target.checked)}
+              className="h-4 w-4 rounded border-charcoal/20"
+            />
+            Hotel upgrade / downgrade
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={seniorPacing}
+              onChange={(e) => setSeniorPacing(e.target.checked)}
+              className="h-4 w-4 rounded border-charcoal/20"
+            />
+            Senior-friendly pacing
+          </label>
+          <div>
+            <Label htmlFor="budgetChange" className="text-charcoal/70">
+              Budget change (optional)
+            </Label>
+            <Input
+              id="budgetChange"
+              value={budgetChange}
+              onChange={(e) => setBudgetChange(e.target.value)}
+              placeholder="e.g. increase budget for luxury"
+              className="mt-1"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="custFullName">Full name *</Label>
+          <Input
+            id="custFullName"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+            className="w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="custEmail">Email *</Label>
+          <Input
+            id="custEmail"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="custWhatsapp">WhatsApp (optional)</Label>
+          <Input
+            id="custWhatsapp"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            className="w-full"
+          />
+        </div>
+        {error && (
+          <p className="text-sm text-red-600">{error}</p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" onClick={onBack}>
+            Back
+          </Button>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? "Sending…" : "Submit customization request"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }

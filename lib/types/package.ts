@@ -29,5 +29,7 @@ export interface PublicPackage {
   badge: string | null;
   is_featured: boolean;
   is_published: boolean;
+  /** Package tags for matching (e.g. cultural, beach, luxury, family). */
+  tags?: string[];
   created_at: string;
 }

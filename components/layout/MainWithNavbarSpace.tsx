@@ -10,14 +10,16 @@ export function MainWithNavbarSpace({
 }: React.ComponentPropsWithoutRef<"main">) {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const isContact = pathname === "/contact";
+  const isHeroLayout = isHome || isContact;
 
   return (
     <main
       {...props}
       className={clsx(
         "min-h-screen flex flex-col",
-        // On home, no top padding so hero can start at top and navbar overlays it
-        isHome ? "" : "pt-16 lg:pt-20",
+        // On home and contact, no top padding so hero/video goes to top and navbar overlays it
+        isHeroLayout ? "" : "pt-16 lg:pt-20",
         className
       )}
     >

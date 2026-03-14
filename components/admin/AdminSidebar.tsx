@@ -16,6 +16,7 @@ import {
   Package,
   Wrench,
   ShoppingBag,
+  Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -102,7 +103,16 @@ export function AdminSidebar({
               );
             })}
           </nav>
-          <div className="border-t border-charcoal/10 p-3">
+          <div className="border-t border-charcoal/10 p-3 space-y-0.5">
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-charcoal/70 transition-colors hover:bg-sand-200 hover:text-charcoal"
+            >
+              <Home className="h-4 w-4 shrink-0" />
+              Home page
+            </Link>
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/admin/login" })}

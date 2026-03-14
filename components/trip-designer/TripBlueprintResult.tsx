@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { getWhatsAppLink } from "@/lib/config/nav";
+import { PRICING_STATUS_LABELS } from "@/lib/trip-designer/pricing-status";
+import { getProposalWhatsAppMessage, getOrderWhatsAppMessage } from "@/lib/trip-designer/lead-handoff";
 
 /** Grounded summary and suggested package from order creation (stored in itineraryJson.meta). */
 type ResultMeta = {
@@ -13,20 +15,56 @@ type ResultMeta = {
   suggestedPackageSlug?: string | null;
   suggestedPackageTitle?: string | null;
   customerMessage?: string | null;
-  /** Optional AI-generated "why this trip fits you" (grounded); fallback is summaryParagraph. */
   aiExplanation?: string | null;
+  pricingStatus?: "CALCULATED" | "ESTIMATED" | "REVIEW_REQUIRED";
 };
 
-/** Trip order data from GET /api/trip-orders/[invoice] (public-safe, no PII). Result data is never read from sessionStorage. */
+/** Trip order data from GET /api/trip-orders/[invoice] (public-safe, no PII). */
 type TripOrderResult = {
   invoiceNumber: string;
   itineraryJson: {
     days?: Array<{ dayNumber?: number; from?: string; to?: string; title?: string; description?: string }>;
     meta?: ResultMeta;
   };
-  pricingJson: { total?: number; deposit?: number; currency?: string; items?: Array<{ label: string; amount: number }> };
+  pricingJson: {
+    total?: number;
+    deposit?: number;
+    currency?: string;
+    items?: Array<{ label: string; amount: number }>;
+    pricingStatus?: "CALCULATED" | "ESTIMATED" | "REVIEW_REQUIRED";
+  };
   handoffMode: string;
   trackingToken?: string | null;
+  country?: string | null;
+  paxAdults?: number | null;
+  paxChildren?: number | null;
+};
+
+/** Trip proposal data from GET /api/trip-proposals/[id]. */
+type TripProposalResult = {
+  id: string;
+  sourcePath: string;
+  packageRefJson: unknown;
+  country: string;
+  tripType: string;
+  durationDays: number;
+  durationNights: number;
+  paxAdults: number;
+  paxChildren: number;
+  paxSeniors?: number | null;
+  interestsJson: unknown;
+  travelStyle?: string | null;
+  budgetTier?: string | null;
+  summary: string;
+  itineraryDaysJson: unknown;
+  pricingStatus: string;
+  pricingJson: unknown;
+  customerFullName: string;
+  customerEmail: string;
+  customerWhatsapp?: string | null;
+  leadStatus?: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Blueprint = {
@@ -47,16 +85,43 @@ export function TripBlueprintResult() {
   const searchParams = useSearchParams();
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [tripOrder, setTripOrder] = useState<TripOrderResult | null>(null);
+  const [tripProposal, setTripProposal] = useState<TripProposalResult | null>(null);
   const [tripOrderNotFound, setTripOrderNotFound] = useState(false);
   const [tripOrderLoading, setTripOrderLoading] = useState(true);
+  const [proposalNotFound, setProposalNotFound] = useState(false);
+  const [proposalLoading, setProposalLoading] = useState(false);
   const [contactSent, setContactSent] = useState(false);
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
   const [payLoading, setPayLoading] = useState<string | null>(null);
 
   useEffect(() => {
+    const proposalId = searchParams.get("proposal");
+    if (proposalId) {
+      setProposalLoading(true);
+      setProposalNotFound(false);
+      setTripOrderLoading(false);
+      fetch(`/api/trip-proposals/${encodeURIComponent(proposalId)}`)
+        .then((res) => {
+          if (!res.ok) {
+            if (res.status === 404) setProposalNotFound(true);
+            return null;
+          }
+          return res.json() as Promise<TripProposalResult>;
+        })
+        .then((data) => {
+          if (data && data.id === proposalId) {
+            setTripProposal(data);
+          }
+        })
+        .catch(() => setProposalNotFound(true))
+        .finally(() => setProposalLoading(false));
+      return;
+    }
+
     const invoice = searchParams.get("invoice");
     if (invoice) {
+      setTripProposal(null);
       setTripOrderLoading(true);
       setTripOrderNotFound(false);
       fetch(`/api/trip-orders/${encodeURIComponent(invoice)}`)
@@ -77,6 +142,7 @@ export function TripBlueprintResult() {
       return;
     }
 
+    setTripProposal(null);
     setTripOrderLoading(false);
     const route = searchParams.get("route_outline");
     if (route) {
@@ -174,6 +240,33 @@ export function TripBlueprintResult() {
     }
   };
 
+  if (searchParams.get("proposal") && proposalLoading) {
+    return (
+      <Container className="max-w-2xl py-12">
+        <p className="text-charcoal/70">Loading your proposal…</p>
+      </Container>
+    );
+  }
+
+  if (searchParams.get("proposal") && proposalNotFound) {
+    return (
+      <Container className="max-w-2xl py-12">
+        <h1 className="font-serif text-2xl font-semibold text-charcoal">Proposal not found</h1>
+        <p className="mt-2 text-charcoal/70">
+          This link may have expired or the proposal ID is incorrect. Please contact us or create a new trip.
+        </p>
+        <div className="mt-6 flex gap-4">
+          <Button as="a" href={getWhatsAppLink()} target="_blank" rel="noopener noreferrer">
+            Contact us on WhatsApp
+          </Button>
+          <Button as="a" href="/build-your-trip" variant="outline">
+            Build your trip again
+          </Button>
+        </div>
+      </Container>
+    );
+  }
+
   if (searchParams.get("invoice") && tripOrderLoading) {
     return (
       <Container className="max-w-2xl py-12">
@@ -201,6 +294,127 @@ export function TripBlueprintResult() {
     );
   }
 
+  if (tripProposal && tripProposal.id) {
+    const itineraryDays = Array.isArray(tripProposal.itineraryDaysJson) ? tripProposal.itineraryDaysJson as Array<{ dayNumber?: number; from?: string; to?: string; title?: string; description?: string }> : [];
+    const pricing = tripProposal.pricingJson as { total?: number; currency?: string; items?: Array<{ label: string; amount: number }> } | null;
+    const total = pricing?.total ?? 0;
+    const pricingStatusLabel = PRICING_STATUS_LABELS[tripProposal.pricingStatus as keyof typeof PRICING_STATUS_LABELS] ?? tripProposal.pricingStatus;
+    const whatsAppMsg = getProposalWhatsAppMessage(tripProposal);
+    const whatsAppUrl = `${getWhatsAppLink()}?text=${encodeURIComponent(whatsAppMsg)}`;
+    const pkgRef = tripProposal.packageRefJson && typeof tripProposal.packageRefJson === "object" ? (tripProposal.packageRefJson as { slug?: string; name?: string }) : null;
+
+    return (
+      <Container className="max-w-2xl">
+        <section className="text-center">
+          <h1 className="font-serif text-3xl font-semibold text-charcoal sm:text-4xl">
+            Your Trip Proposal
+          </h1>
+          <p className="mt-2 text-charcoal/70">
+            Here’s your personalized proposal and next steps.
+          </p>
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-charcoal/10 bg-charcoal/[0.02] p-4">
+          <h2 className="text-sm font-semibold text-charcoal/70 uppercase tracking-wide">Trip details</h2>
+          <ul className="mt-2 space-y-1 text-sm text-charcoal/90">
+            <li>Destination: {tripProposal.country}</li>
+            <li>Adults: {tripProposal.paxAdults}</li>
+            {tripProposal.paxChildren > 0 && <li>Children: {tripProposal.paxChildren}</li>}
+            {tripProposal.paxSeniors != null && tripProposal.paxSeniors > 0 && <li>55+ travellers: {tripProposal.paxSeniors}</li>}
+          </ul>
+        </section>
+
+        <section className="mt-8 rounded-2xl border-2 border-teal/20 bg-teal/5 p-6 shadow-soft">
+          <h2 className="text-lg font-semibold text-charcoal">Next step</h2>
+          <p className="mt-1 text-sm text-charcoal/80">
+            Review your proposal below. Download it, email it to yourself, or contact us to confirm.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button as="a" href={`/api/trip-proposals/${encodeURIComponent(tripProposal.id)}/pdf`} variant="primary" target="_blank" rel="noopener noreferrer">
+              Download proposal
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const r = await fetch(`/api/trip-proposals/${encodeURIComponent(tripProposal.id)}/email`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+                  if (r.ok) window.alert("Proposal sent to your email.");
+                  else window.alert("Could not send email. Please try again.");
+                } catch {
+                  window.alert("Could not send email. Please try again.");
+                }
+              }}
+            >
+              Email this itinerary to me
+            </Button>
+            <Button as="a" href={whatsAppUrl} target="_blank" rel="noopener noreferrer" variant="outline">
+              WhatsApp us
+            </Button>
+          </div>
+        </section>
+
+        {tripProposal.summary && (
+          <section className="mt-8 rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="text-sm font-semibold text-charcoal/70 uppercase tracking-wide">Overview</h2>
+            <p className="mt-3 text-charcoal/90">{tripProposal.summary}</p>
+          </section>
+        )}
+
+        {itineraryDays.length > 0 && (
+          <section className="mt-8 rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="text-lg font-medium text-charcoal">Day-by-day itinerary</h2>
+            <ul className="mt-4 space-y-4">
+              {itineraryDays.map((day, i) => (
+                <li key={i} className="border-l-2 border-teal/30 pl-4">
+                  <span className="font-medium text-charcoal">Day {day.dayNumber ?? i + 1}</span>
+                  {(day.from || day.to) && (
+                    <span className="ml-2 text-sm text-charcoal/70">
+                      {day.from ?? "—"} → {day.to ?? "—"}
+                    </span>
+                  )}
+                  {day.title && <div className="mt-1 font-medium text-charcoal/90">{day.title}</div>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <section className="mt-8 rounded-2xl bg-white p-6 shadow-soft">
+          <h2 className="text-lg font-medium text-charcoal">Pricing</h2>
+          <p className="mt-1 text-sm font-medium text-charcoal/80">{pricingStatusLabel}</p>
+          <p className="mt-1 text-sm text-charcoal/60">All amounts in {(pricing?.currency ?? "USD").toUpperCase()}</p>
+          {total > 0 && (
+            <p className="mt-4 border-t border-charcoal/10 pt-3 font-semibold text-charcoal">
+              Total: ${(typeof total === "number" ? total : 0).toLocaleString()}
+            </p>
+          )}
+        </section>
+
+        {pkgRef?.slug && (
+          <section className="mt-6 rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="text-sm font-semibold text-charcoal/70 uppercase tracking-wide">Based on package</h2>
+            <p className="mt-1 font-medium text-charcoal">{pkgRef.name ?? pkgRef.slug}</p>
+            <Button as="a" href={`/packages/${encodeURIComponent(pkgRef.slug!)}`} variant="outline" className="mt-3">
+              View package
+            </Button>
+          </section>
+        )}
+
+        <section className="mt-8 rounded-2xl border border-charcoal/10 bg-charcoal/[0.02] p-5 text-center">
+          <p className="text-sm text-charcoal/80">Questions or want to customize?</p>
+          <Button as="a" href={whatsAppUrl} target="_blank" rel="noopener noreferrer" variant="outline" className="mt-3">
+            Talk to a travel expert on WhatsApp
+          </Button>
+        </section>
+
+        <p className="mt-8 text-center text-sm text-charcoal/60">
+          <Link href="/build-your-trip" className="underline hover:text-charcoal">Start over</Link>
+        </p>
+      </Container>
+    );
+  }
+
   if (tripOrder && tripOrder.invoiceNumber) {
     const itinerary = tripOrder.itineraryJson?.days ?? [];
     const meta = tripOrder.itineraryJson?.meta;
@@ -208,8 +422,16 @@ export function TripBlueprintResult() {
     const total = pricing?.total ?? 0;
     const deposit = pricing?.deposit ?? 0;
     const isCheckout = tripOrder.handoffMode === "CHECKOUT";
-    const summary = `Hi, I have a trip request. Invoice: ${tripOrder.invoiceNumber}. I’d like to discuss or confirm my booking.`;
-    const whatsAppUrl = `${getWhatsAppLink()}?text=${encodeURIComponent(summary)}`;
+    const orderSummary = getOrderWhatsAppMessage({
+      invoiceNumber: tripOrder.invoiceNumber,
+      country: tripOrder.country ?? undefined,
+      paxAdults: tripOrder.paxAdults ?? undefined,
+      paxChildren: tripOrder.paxChildren ?? undefined,
+      summary: meta?.summaryParagraph,
+    });
+    const whatsAppUrl = `${getWhatsAppLink()}?text=${encodeURIComponent(orderSummary)}`;
+    const pricingStatusKey = (tripOrder.pricingJson?.pricingStatus ?? meta?.pricingStatus) as "CALCULATED" | "ESTIMATED" | "REVIEW_REQUIRED" | undefined;
+    const pricingStatusLabel = pricingStatusKey ? PRICING_STATUS_LABELS[pricingStatusKey] : null;
     const suggestedSlug = meta?.suggestedPackageSlug ?? null;
     const suggestedTitle = meta?.suggestedPackageTitle ?? null;
     const routeSummary =
@@ -231,6 +453,19 @@ export function TripBlueprintResult() {
             Here’s your personalized outline and next steps.
           </p>
         </section>
+
+        {(tripOrder.country || tripOrder.paxAdults != null || tripOrder.paxChildren != null) && (
+          <section className="mt-6 rounded-2xl border border-charcoal/10 bg-charcoal/[0.02] p-4">
+            <h2 className="text-sm font-semibold text-charcoal/70 uppercase tracking-wide">Trip details</h2>
+            <ul className="mt-2 space-y-1 text-sm text-charcoal/90">
+              {tripOrder.country && <li>Destination: {tripOrder.country}</li>}
+              {tripOrder.paxAdults != null && <li>Adults: {tripOrder.paxAdults}</li>}
+              {tripOrder.paxChildren != null && tripOrder.paxChildren > 0 && (
+                <li>Children: {tripOrder.paxChildren}</li>
+              )}
+            </ul>
+          </section>
+        )}
 
         <section className="mt-8 rounded-2xl border-2 border-teal/20 bg-teal/5 p-6 shadow-soft">
           <h2 className="text-lg font-semibold text-charcoal">Next step</h2>
@@ -259,6 +494,24 @@ export function TripBlueprintResult() {
               variant="outline"
             >
               Track your trip
+            </Button>
+            <Button as="a" href={`/api/trip-orders/${encodeURIComponent(tripOrder.invoiceNumber)}/pdf`} variant="outline" target="_blank" rel="noopener noreferrer">
+              Download proposal
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const r = await fetch(`/api/trip-orders/${encodeURIComponent(tripOrder.invoiceNumber)}/email`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+                  if (r.ok) window.alert("Proposal sent to your email.");
+                  else window.alert("Could not send email. Please try again.");
+                } catch {
+                  window.alert("Could not send email. Please try again.");
+                }
+              }}
+            >
+              Email this itinerary to me
             </Button>
           </div>
         </section>
@@ -333,9 +586,12 @@ export function TripBlueprintResult() {
           </section>
         )}
 
-        {(total > 0 || (Array.isArray(pricing?.items) && pricing.items.length > 0)) && (
+        {(total > 0 || (Array.isArray(pricing?.items) && pricing.items.length > 0) || pricingStatusLabel) && (
           <section className="mt-8 rounded-2xl bg-white p-6 shadow-soft">
             <h2 className="text-lg font-medium text-charcoal">Pricing</h2>
+            {pricingStatusLabel && (
+              <p className="mt-1 text-sm font-medium text-charcoal/80">{pricingStatusLabel}</p>
+            )}
             <p className="mt-1 text-sm text-charcoal/60">All amounts in {(pricing?.currency ?? "USD").toUpperCase()}</p>
             {Array.isArray(pricing?.items) &&
               pricing.items.map((item: { label: string; amount: number }, i: number) => (

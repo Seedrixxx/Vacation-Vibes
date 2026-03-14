@@ -23,6 +23,9 @@ export type OrderByInvoiceResult = {
   pricingJson: object | null;
   handoffMode: string;
   trackingToken: string | null;
+  country?: string | null;
+  paxAdults?: number | null;
+  paxChildren?: number | null;
 } | null;
 
 export type OrderByTokenResult = {
@@ -135,12 +138,15 @@ export async function createTripOrder(input: TripOrderCreateInput): Promise<Crea
     const totalAmount = pricing.total;
     const depositAmount = pricing.deposit;
 
+    const pricingStatus =
+      pricing.pricingMode === "PRICED" && pricing.total > 0 ? "CALCULATED" : "REVIEW_REQUIRED";
     const pricingJson = {
       currency: pricing.currency,
       total: totalAmount,
       deposit: depositAmount,
       items: pricing.items,
       pricingMode: pricing.pricingMode,
+      pricingStatus,
     };
 
     let summaryParagraph: string;
@@ -194,6 +200,7 @@ export async function createTripOrder(input: TripOrderCreateInput): Promise<Crea
         suggestedPackageTitle,
         customerMessage,
         aiExplanation: aiExplanation ?? undefined,
+        pricingStatus,
       },
     };
 
@@ -248,6 +255,9 @@ export async function getOrderByInvoice(invoice: string): Promise<OrderByInvoice
     pricingJson: order.pricingJson as object | null,
     handoffMode: order.handoffMode,
     trackingToken: order.trackingToken,
+    country: order.country ?? undefined,
+    paxAdults: order.paxAdults ?? undefined,
+    paxChildren: order.paxChildren ?? undefined,
   };
 }
 

@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { MessageCircle, X } from "lucide-react";
+import { X } from "lucide-react";
 import { getWhatsAppLink } from "@/lib/config/nav";
+
+const AMAYA_GREETING = "Hi I'm Amaya! How can I assist you today?";
 
 const RELEVANT_SECTION_SELECTORS = [
   "#packages",
@@ -20,15 +23,33 @@ type ChatMessage = {
 export function ChatWidget() {
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const hasAutoOpenedRef = useRef(false);
+  const hasShownGreetingRef = useRef(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => setMounted(true), []);
+
+  // Show "Hi I'm Amaya" popup only when the Featured Sri Lanka Tour Packages section (#packages) is in view
+  useEffect(() => {
+    if (!mounted) return;
+    const packagesSection = document.getElementById("packages");
+    if (!packagesSection) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const inView = entries.some((e) => e.isIntersecting);
+        setShowPopup(inView);
+      },
+      { threshold: 0.2, rootMargin: "0px 0px -5% 0px" }
+    );
+    observer.observe(packagesSection);
+    return () => observer.disconnect();
+  }, [mounted]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,7 +71,13 @@ export function ChatWidget() {
         const visible = entries.some((e) => e.isIntersecting);
         if (visible && !hasAutoOpenedRef.current) {
           hasAutoOpenedRef.current = true;
+          hasShownGreetingRef.current = true;
           setIsOpen(true);
+          setMessages((prev) =>
+            prev.length === 0
+              ? [{ role: "assistant", content: AMAYA_GREETING }]
+              : prev
+          );
         }
       },
       { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }
@@ -100,6 +127,21 @@ export function ChatWidget() {
     }
   };
 
+  const handleOpenChat = () => {
+    if (!isOpen) {
+      setIsOpen(true);
+      if (!hasShownGreetingRef.current) {
+        hasShownGreetingRef.current = true;
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: AMAYA_GREETING },
+        ]);
+      }
+    } else {
+      setIsOpen(false);
+    }
+  };
+
   if (!mounted) return null;
 
   const whatsAppUrl = getWhatsAppLink();
@@ -119,7 +161,7 @@ export function ChatWidget() {
             aria-label="Trip chat"
           >
             <div className="flex items-center justify-between border-b border-charcoal/10 bg-sand/30 px-4 py-3">
-              <span className="font-medium text-charcoal">Trip assistant</span>
+              <span className="font-medium text-charcoal">Amaya</span>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
@@ -195,18 +237,43 @@ export function ChatWidget() {
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-teal text-white shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
-        aria-label={isOpen ? "Close chat" : "Open chat"}
-        initial={false}
-        animate={{ scale: 1 }}
-        whileHover={reduceMotion ? undefined : { scale: 1.05 }}
-        whileTap={{ scale: 0.98 }}
+      <div
+        className="relative flex flex-col items-end"
+        onMouseEnter={() => !isOpen && setShowPopup(true)}
+        onMouseLeave={() => setShowPopup(false)}
       >
-        <MessageCircle className="h-7 w-7" />
-      </motion.button>
+        <AnimatePresence>
+          {showPopup && !isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.2 }}
+              className="mb-2 rounded-2xl rounded-br-sm bg-white px-4 py-2.5 shadow-lg ring-1 ring-charcoal/10"
+            >
+              <p className="text-sm font-medium text-charcoal">Hi I&apos;m Amaya</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <motion.button
+          type="button"
+          onClick={handleOpenChat}
+          className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-charcoal/5 shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
+          aria-label={isOpen ? "Close chat" : "Open chat"}
+          initial={false}
+          animate={{ scale: 1 }}
+          whileHover={reduceMotion ? undefined : { scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Image
+            src="/images/chatbot.png"
+            alt="Amaya"
+            width={56}
+            height={56}
+            className="h-full w-full object-cover"
+          />
+        </motion.button>
+      </div>
     </div>
   );
 }

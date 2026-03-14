@@ -53,7 +53,15 @@ export function mapPrismaPackageToPublic(pkg: PrismaPackageWithRelations): Publi
         : null;
 
   const isFeatured = pkg.featured ?? pkg.tags.includes("featured");
-  const budgetTier = BUDGET_TIERS.find((t) => pkg.tags.includes(t)) ?? "mid";
+  const tags = Array.isArray(pkg.tags) ? pkg.tags : [];
+  const budgetTierFromTag = BUDGET_TIERS.find((t) => tags.includes(t));
+  const budgetTier =
+    budgetTierFromTag ??
+    (pkg.startingPrice != null && pkg.startingPrice > 50000
+      ? "luxury"
+      : pkg.startingPrice != null && pkg.startingPrice < 20000
+        ? "budget"
+        : "mid");
 
   const listItems = pkg.packageListItems ?? [];
   const inclusions = listItems
@@ -85,7 +93,7 @@ export function mapPrismaPackageToPublic(pkg: PrismaPackageWithRelations): Publi
     destination_id: pkg.primaryDestinationId ?? null,
     primary_destination_slug: pkg.primaryDestination?.slug ?? null,
     primary_destination_name: pkg.primaryDestination?.name ?? null,
-    country: pkg.country ?? null,
+    country: pkg.country?.trim() || null,
     travel_type: pkg.tripType,
     duration_days: pkg.durationDays,
     duration_nights: pkg.durationNights,
@@ -105,6 +113,7 @@ export function mapPrismaPackageToPublic(pkg: PrismaPackageWithRelations): Publi
     badge: pkg.badge ?? null,
     is_featured: isFeatured,
     is_published: pkg.isPublished,
+    tags: tags.map((t) => (typeof t === "string" ? t.trim().toLowerCase() : "")).filter(Boolean),
     created_at: pkg.createdAt.toISOString(),
   };
 }

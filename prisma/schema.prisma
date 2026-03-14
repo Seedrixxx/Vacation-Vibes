@@ -125,6 +125,24 @@ model TripRequest {
   createdAt DateTime          @default(now())
 }
 
+model PackageCustomizationRequest {
+  id                  String   @id @default(cuid())
+  packageId           String
+  packageSlug         String
+  packageName         String
+  matchScore          Int?
+  builderInputsJson   Json
+  requestedChangesJson Json?
+  customerFullName    String
+  customerEmail       String
+  customerWhatsapp    String?
+  message             String?
+  status              String   @default("PENDING")
+  source              String   @default("BUILD_TRIP")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
 // ---- Trip Commerce ----
 
 enum TripType {
@@ -409,4 +427,41 @@ model InvoiceSequence {
   id         String @id @default(cuid())
   yearMonth  String @unique
   lastNumber Int    @default(0)
+}
+
+enum TripProposalSourcePath {
+  MATCHED_PACKAGE_CUSTOMIZATION
+  FULL_CUSTOM_BUILD
+}
+
+enum ProposalPricingStatus {
+  CALCULATED
+  ESTIMATED
+  REVIEW_REQUIRED
+}
+
+model TripProposal {
+  id              String                 @id @default(cuid())
+  sourcePath      TripProposalSourcePath
+  packageRefJson  Json?
+  country         String
+  tripType        String
+  durationDays    Int
+  durationNights  Int
+  paxAdults       Int
+  paxChildren     Int
+  paxSeniors      Int?
+  interestsJson   Json                   @default("[]")
+  travelStyle     String?
+  budgetTier       String?
+  summary         String                 @db.Text
+  itineraryDaysJson Json                @default("[]")
+  pricingStatus   ProposalPricingStatus
+  pricingJson     Json?
+  customerFullName String
+  customerEmail   String
+  customerWhatsapp String?
+  leadStatus      String?                @default("NEW")
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
 }

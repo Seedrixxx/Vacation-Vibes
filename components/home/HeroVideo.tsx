@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/Button";
 export function HeroVideo() {
   const [videoError, setVideoError] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Start muted so autoplay is allowed, then try to unmute
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +28,8 @@ export function HeroVideo() {
     const video = videoRef.current;
     if (!video) return;
     video.muted = true;
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("webkit-playsinline", "true");
     video.play().catch(() => setVideoError(true));
   }, []);
 
@@ -48,43 +49,30 @@ export function HeroVideo() {
     }
   }, [isMuted, volume]);
 
-  const handleMuteToggle = async () => {
+  const handleMuteToggle = () => {
     const video = videoRef.current;
     if (isMuted) {
-      // Unmute: must set video.muted/volume in the same user gesture so browsers allow sound
       if (video) {
         video.muted = false;
         video.volume = 1;
       }
       setIsMuted(false);
-      const el = containerRef.current;
-      try {
-        if (el && !document.fullscreenElement) {
-          await el.requestFullscreen();
-          setIsFullscreen(true);
-        }
-      } catch {
-        // Fullscreen failed; unmute still applies
-      }
     } else {
       if (video) video.muted = true;
       setIsMuted(true);
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-        setIsFullscreen(false);
-      }
     }
   };
 
-  useEffect(() => {
-    const onFullscreenChange = () => {
-      if (!document.fullscreenElement) setIsFullscreen(false);
-    };
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
-  }, []);
-
   const isHeroInView = useInView(containerRef, { amount: 0.5, once: false });
+
+  // Retry play when hero enters view (helps on mobile when autoplay is delayed)
+  useEffect(() => {
+    if (!isHeroInView || videoError) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.play().catch(() => {});
+  }, [isHeroInView, videoError]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -114,6 +102,13 @@ export function HeroVideo() {
       <div
         ref={containerRef}
         className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-charcoal"
+        onTouchStart={() => {
+          const video = videoRef.current;
+          if (video && !videoError) {
+            video.muted = true;
+            video.play().catch(() => {});
+          }
+        }}
       >
         {/* Video or fallback */}
         {!videoError ? (
@@ -130,11 +125,14 @@ export function HeroVideo() {
             className="absolute inset-0 h-full w-full object-cover"
             poster="/images/hero-poster.jpg"
           >
+            {/* MP4 first for iOS/Safari (no WebM support); WebM for Chrome/Firefox */}
+            <source src="/images/Cinematic.mp4" type="video/mp4" />
             <source src="/images/Cinematic.webm" type="video/webm" />
           </video>
         ) : (
           <div
-            className="absolute inset-0 bg-gradient-to-br from-teal via-teal-600 to-charcoal"
+            className="absolute inset-0 bg-charcoal bg-cover bg-center"
+            style={{ backgroundImage: 'url("/images/hero-poster.jpg")' }}
             aria-hidden="true"
           />
         )}
@@ -144,11 +142,11 @@ export function HeroVideo() {
           className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/25 to-black/50 pointer-events-none z-[1]"
         />
 
-        {/* Mute / Unmute — z-[60] so it sits above the fixed Navbar (z-50) and is clickable */}
+        {/* Mute / Unmute — bottom-left corner of video */}
         <button
           type="button"
           onClick={handleMuteToggle}
-          className="absolute right-4 top-4 z-[60] flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="absolute bottom-4 left-4 z-[60] flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           aria-label={isMuted ? "Unmute video" : "Mute video"}
         >
           {isMuted ? (
@@ -172,7 +170,7 @@ export function HeroVideo() {
           >
             <motion.h1
               variants={itemVariants}
-              className="font-serif text-4xl font-semibold leading-tight tracking-tight text-white drop-shadow-heroText sm:text-5xl lg:text-6xl xl:text-7xl"
+              className="font-serif text-3xl font-semibold leading-tight tracking-tight text-white drop-shadow-heroText sm:text-4xl lg:text-5xl xl:text-6xl"
             >
               Sri Lanka{" "}
               <span className="text-gold drop-shadow-heroText">In Every Vibe.</span>
@@ -180,21 +178,21 @@ export function HeroVideo() {
 
             <motion.p
               variants={itemVariants}
-              className="mx-auto mt-6 max-w-xl text-base text-white/90 drop-shadow-heroText sm:text-lg lg:text-xl"
+              className="mx-auto mt-4 max-w-xl text-sm text-white/90 drop-shadow-heroText sm:text-base lg:text-lg"
             >
               Discover Sri Lanka through curated inbound tours designed around how you want to feel — wild safaris, misty hill country, ancient heritage, and golden beaches in one seamless journey.
             </motion.p>
 
             <motion.div
               variants={itemVariants}
-              className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row lg:mt-10"
+              className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row lg:mt-8"
             >
               <Button
                 as="a"
                 href="#packages"
                 variant="primary"
-                size="lg"
-                className="w-full sm:w-auto"
+                size="md"
+                className="w-full sm:w-auto text-sm"
               >
                 Explore Sri Lanka Tours
               </Button>
@@ -202,8 +200,8 @@ export function HeroVideo() {
                 as="a"
                 href="/build-your-trip"
                 variant="outline"
-                size="lg"
-                className="w-full border-white/80 text-white drop-shadow-heroText hover:border-white hover:text-white sm:w-auto"
+                size="md"
+                className="w-full border-white/80 text-white text-sm drop-shadow-heroText hover:border-white hover:text-white sm:w-auto"
               >
                 Build Your Custom Sri Lanka Trip
               </Button>
@@ -211,7 +209,7 @@ export function HeroVideo() {
           </motion.div>
         </Container>
 
-        {/* Scroll Indicator — only animate when hero is in view (useInView) */}
+        {/* Scroll Indicator — centered at bottom of hero */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{
@@ -219,7 +217,7 @@ export function HeroVideo() {
             y: isHeroInView ? 0 : -10,
           }}
           transition={{ delay: 1.5, duration: 0.8 }}
-          className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
+          className="absolute bottom-8 left-0 right-0 z-10 flex justify-center"
         >
           <a
             href="#why-sri-lanka"

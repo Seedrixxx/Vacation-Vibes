@@ -1,32 +1,43 @@
 import { Metadata } from "next";
-import { Container } from "@/components/ui/Container";
+import { AboutHero } from "@/components/about/AboutHero";
+import { OurStorySection } from "@/components/about/OurStorySection";
+import { WhoWeAreSection } from "@/components/about/WhoWeAreSection";
+import { VisionMissionSection } from "@/components/about/VisionMissionSection";
+import { CoreValuesSection } from "@/components/about/CoreValuesSection";
+import { CEOMessageSection } from "@/components/about/CEOMessageSection";
+import { TeamMembersSection } from "@/components/about/TeamMembersSection";
+import { AboutCTASection } from "@/components/about/AboutCTASection";
 
-// Static content only; no API calls — load instantly from structured data.
+const teamMembers = [
+  { image: "/images/Team/4.png", name: "Team Member", role: "Travel Expert" },
+  { image: "/images/Team/5.png", name: "Team Member", role: "Travel Expert" },
+  { image: "/images/Team/6.png", name: "Team Member", role: "Travel Expert" },
+  { image: "/images/Team/7.png", name: "Team Member", role: "Travel Expert" },
+  { image: "/images/Team/8.png", name: "Team Member", role: "Travel Expert" },
+  { image: "/images/Team/9.png", name: "Team Member", role: "Travel Expert" },
+  { image: "/images/Team/10.png", name: "Team Member", role: "Travel Expert" },
+];
+
 export const runtime = "edge";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "About | Vacation Vibez",
-  description: "Our story, mission, and why travelers choose us for Sri Lanka and beyond.",
+  title: "About Us | Vacation Vibez",
+  description:
+    "Trusted travel agency in Sri Lanka & UAE. Personalized packages, expert guidance, hassle-free services, and 24/7 support. Plan your dream trip with Vacation Vibes.",
 };
 
 export default function AboutPage() {
   return (
-    <div className="bg-sand py-16 lg:py-24">
-      <Container>
-        <h1 className="font-serif text-4xl font-semibold text-charcoal">About Vacation Vibez</h1>
-        <p className="mt-4 max-w-2xl text-charcoal/70">
-          We craft personalized journeys through Sri Lanka and select destinations. Our team combines local expertise with a passion for thoughtful travel—every itinerary is designed around you.
-        </p>
-        <section className="mt-12">
-          <h2 className="font-serif text-2xl font-semibold text-charcoal">Why choose us</h2>
-          <ul className="mt-4 list-inside list-disc space-y-2 text-charcoal/70">
-            <li>Local expertise and long-standing partnerships</li>
-            <li>Handpicked stays and experiences</li>
-            <li>Transparent pricing and 24/7 support</li>
-          </ul>
-        </section>
-      </Container>
+    <div className="min-h-screen bg-white">
+      <AboutHero />
+      <OurStorySection />
+      <WhoWeAreSection />
+      <VisionMissionSection />
+      <CoreValuesSection />
+      <CEOMessageSection />
+      <TeamMembersSection members={teamMembers} />
+      <AboutCTASection />
     </div>
   );
 }

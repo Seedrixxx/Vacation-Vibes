@@ -1,3 +1,4 @@
+import { Mail, Phone } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { footerColumns, footerContact, socialLinks } from "@/lib/homeData";
 
@@ -89,41 +90,49 @@ export function Footer() {
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white/90">
               Contact
             </h3>
-            <ul className="mt-4 space-y-2 text-sm text-white/60">
-              <li>
-                <a
-                  href={`mailto:${footerContact.email}`}
-                  className="transition-colors hover:text-gold"
-                >
-                  {footerContact.email}
-                </a>
-              </li>
-              <li>
-                Sri Lanka:{" "}
-                <a
-                  href={`tel:${footerContact.sriLanka[0].replace(/\s/g, "")}`}
-                  className="transition-colors hover:text-gold"
-                >
-                  {footerContact.sriLanka[0]}
-                </a>
-                {" | "}
-                <a
-                  href={`tel:${footerContact.sriLanka[1].replace(/\s/g, "")}`}
-                  className="transition-colors hover:text-gold"
-                >
-                  {footerContact.sriLanka[1]}
-                </a>
-              </li>
-              <li>
-                UAE:{" "}
+            <div className="mt-4 space-y-4">
+              <a
+                href={`mailto:${footerContact.email}`}
+                className="flex items-center gap-3 text-sm text-white/60 transition-colors hover:text-gold"
+              >
+                <Mail className="h-4 w-4 shrink-0 text-white/50" aria-hidden />
+                <span>{footerContact.email}</span>
+              </a>
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-wider text-white/50">
+                  Sri Lanka
+                </p>
+                <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
+                  <a
+                    href={`tel:${footerContact.sriLanka[0].replace(/\s/g, "")}`}
+                    className="flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-gold"
+                  >
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-white/50" aria-hidden />
+                    {footerContact.sriLanka[0]}
+                  </a>
+                  <span className="text-white/40" aria-hidden>|</span>
+                  <a
+                    href={`tel:${footerContact.sriLanka[1].replace(/\s/g, "")}`}
+                    className="flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-gold"
+                  >
+                    <Phone className="h-3.5 w-3.5 shrink-0 text-white/50" aria-hidden />
+                    {footerContact.sriLanka[1]}
+                  </a>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-wider text-white/50">
+                  UAE
+                </p>
                 <a
                   href={`tel:${footerContact.uae.replace(/\s/g, "")}`}
-                  className="transition-colors hover:text-gold"
+                  className="flex items-center gap-3 text-sm text-white/60 transition-colors hover:text-gold"
                 >
-                  {footerContact.uae}
+                  <Phone className="h-4 w-4 shrink-0 text-white/50" aria-hidden />
+                  <span>{footerContact.uae}</span>
                 </a>
-              </li>
-            </ul>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,9 @@ import { Label } from "@/components/ui/label";
 type SearchResultItem = { id: string; slug: string; title: string; type: string };
 
 export default function SearchPage() {
-  const [q, setQ] = useState("");
+  const searchParams = useSearchParams();
+  const qParam = searchParams.get("q") ?? "";
+  const [q, setQ] = useState(qParam);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<{
     packages: SearchResultItem[];
@@ -46,6 +49,34 @@ export default function SearchPage() {
     if (item.type === "destination") return `/destinations/${item.slug}`;
     return `/#experiences`;
   };
+
+  // Sync input with URL and run search when landing with ?q=...
+  useEffect(() => {
+    setQ(qParam);
+    const query = qParam.trim();
+    if (query.length < 2) {
+      setResults(null);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setResults(null);
+    fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      .then((res) => res.json().catch(() => ({})))
+      .then((data) => {
+        if (!cancelled && data.packages != null) setResults(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Search failed");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [qParam]);
 
   return (
     <div className="bg-sand py-16 lg:py-24">

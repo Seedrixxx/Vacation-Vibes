@@ -28,6 +28,18 @@ export const tripOrderCreateSchema = z.object({
   totalAmount: z.coerce.number().int().min(0).optional().nullable(),
   depositAmount: z.coerce.number().int().min(0).optional().nullable(),
   handoffMode: z.enum(["CHECKOUT", "AGENT"]).optional(),
-});
+}).refine(
+  (data) => {
+    if (data.source !== "BUILD_TRIP") return true;
+    const countryOk = data.country != null && String(data.country).trim().length > 0;
+    const paxAdultsOk = data.paxAdults == null || data.paxAdults >= 1;
+    const paxChildrenOk = data.paxChildren == null || data.paxChildren >= 0;
+    return countryOk && paxAdultsOk && paxChildrenOk;
+  },
+  {
+    message: "For trip builder, country is required and at least 1 adult.",
+    path: ["country"],
+  }
+);
 
 export type TripOrderCreateInput = z.infer<typeof tripOrderCreateSchema>;

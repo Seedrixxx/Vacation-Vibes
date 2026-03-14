@@ -350,6 +350,24 @@ export const footerContact = {
   uae: "+971 56 443 8965",
 };
 
+/** Contact page: office labels, Google Maps embed (iframe) and share (open in maps) URLs */
+export const contactOffices = {
+  sriLanka: {
+    name: "Sri Lanka Office",
+    address: "Colombo, Sri Lanka",
+    mapEmbedUrl:
+      "https://www.google.com/maps/embed?pb=!1m17!1m11!1m3!1d629.2118705990937!2d79.87291478772748!3d6.877969514639357!2m2!1f0!2f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae25b7fd245b083%3A0x837ab9ff3082e0a3!2sVacation%20Vibes%20(PVT)%20LTD!5e1!3m2!1sen!2sae!4v1773437106365!5m2!1sen!2sae",
+    mapShareUrl: "https://share.google/ZwgBAEukr4Ur7btWl",
+  },
+  uae: {
+    name: "UAE Office",
+    address: "Dubai, United Arab Emirates",
+    mapEmbedUrl:
+      "https://www.google.com/maps/embed?pb=!1m17!1m11!1m3!1d629.2117492559182!2d55.29159259600725!3d25.26439864467803!2m2!1f0!2f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f437006f9bc25%3A0x80985db9b835f8e2!2sVacation%20Vibes%20Travel%20and%20Tourism!5e1!3m2!1sen!2sae!4v1773437177706!5m2!1sen!2sae",
+    mapShareUrl: "https://share.google/XVsISmE2GYjCq7W9u",
+  },
+} as const;
+
 /**
  * Static testimonials for home page when not loading from API.
  * Same shape as TestimonialItem in components/home/Testimonials.tsx.

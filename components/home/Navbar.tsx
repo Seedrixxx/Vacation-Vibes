@@ -8,8 +8,11 @@ import clsx from "clsx";
 import { mainNav, getWhatsAppLink, adminLoginHref } from "@/lib/config/nav";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { NavbarSearch } from "@/components/home/NavbarSearch";
 
 const SCROLL_THRESHOLD = 20;
+
+const mainNavWithoutSearch = mainNav.filter((link) => link.href !== "/search");
 
 export function Navbar() {
   const pathname = usePathname();
@@ -17,7 +20,9 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isHomePage = pathname === "/";
-  const isHeroMode = isHomePage && !isScrolled;
+  const isContactPage = pathname === "/contact";
+  const isHeroPage = isHomePage || isContactPage;
+  const isHeroMode = isHeroPage && !isScrolled;
 
   const { scrollY } = useScroll();
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -55,9 +60,9 @@ export function Navbar() {
             />
           </a>
 
-          {/* Desktop Navigation */}
-          <div className="hidden items-center gap-1 lg:flex">
-            {mainNav.map((link) => (
+          {/* Desktop Navigation + Search */}
+          <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
+            {mainNavWithoutSearch.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -71,10 +76,11 @@ export function Navbar() {
                 {link.label}
               </a>
             ))}
+            <NavbarSearch isHeroMode={isHeroMode} />
           </div>
 
           {/* Desktop: WhatsApp, CTA, Login */}
-          <div className="hidden items-center gap-2 lg:flex">
+          <div className="hidden shrink-0 items-center gap-2 lg:flex">
             <a
               href={getWhatsAppLink()}
               target="_blank"
@@ -163,7 +169,12 @@ export function Navbar() {
           >
             <Container className="py-4">
               <div className="flex flex-col gap-2">
-                {mainNav.map((link) => (
+                <NavbarSearch
+                  alwaysExpanded
+                  onNavigate={() => setIsMobileMenuOpen(false)}
+                  className="mb-2"
+                />
+                {mainNavWithoutSearch.map((link) => (
                   <a
                     key={link.href}
                     href={link.href}

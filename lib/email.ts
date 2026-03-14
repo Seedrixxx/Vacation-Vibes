@@ -133,3 +133,21 @@ export async function sendTripStatusUpdate(params: {
     html,
   });
 }
+
+/** Trip proposal — send summary and link to result page. */
+export async function sendProposalEmail(params: {
+  to: string;
+  customerName: string;
+  proposalId: string;
+  resultUrl: string;
+  summary?: string;
+}) {
+  if (!resend) return;
+  const html = `<p>Hi ${params.customerName},</p><p>Your trip proposal is ready.</p><p><a href="${params.resultUrl}">View your proposal</a></p>${params.summary ? `<p>${params.summary.slice(0, 300)}${params.summary.length > 300 ? "…" : ""}</p>` : ""}<p>— Vacation Vibez</p>`;
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: params.to,
+    subject: "Your trip proposal — Vacation Vibez",
+    html,
+  });
+}
