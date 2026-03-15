@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { rateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { packageCustomizationRequestSchema } from "@/lib/validators/package-customization-request";
@@ -38,8 +39,8 @@ export async function POST(request: Request) {
         packageSlug: data.packageSlug,
         packageName: data.packageName,
         matchScore: data.matchScore ?? null,
-        builderInputsJson: data.builderInputsJson ?? {},
-        requestedChangesJson: data.requestedChangesJson ?? {},
+        builderInputsJson: (data.builderInputsJson ?? {}) as Prisma.InputJsonValue,
+        requestedChangesJson: data.requestedChangesJson != null ? (data.requestedChangesJson as Prisma.InputJsonValue) : undefined,
         customerFullName: data.customerFullName,
         customerEmail: data.customerEmail,
         customerWhatsapp: data.customerWhatsapp,
