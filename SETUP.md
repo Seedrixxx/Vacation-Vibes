@@ -79,7 +79,7 @@ Copy `.env.example` to `.env` and fill in values.
 | `RESEND_FROM_EMAIL` | Sender (e.g. `Vacation Vibez <onboarding@resend.dev>`) | Emails |
 | **Other** | | |
 | `DEFAULT_DEPOSIT_AMOUNT` | Default deposit amount (e.g. `500`) | Payments |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | WhatsApp number (e.g. `94771234567`) | WhatsApp / live agent CTA |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | WhatsApp number for forwarding (e.g. `94707155960` for +94 70 715 5960) | WhatsApp / live agent CTA |
 | `OPENAI_API_KEY` | OpenAI API key (e.g. `sk-...`). Get one at platform.openai.com; new accounts get free trial credits. The chatbot uses **gpt-4o-mini** (cheapest model) so credits last longer. | Itinerary chatbot (replaces floating WhatsApp with chat widget) |
 | `NEXT_PUBLIC_GA4_ID` | Google Analytics 4 ID | Analytics (optional) |
 

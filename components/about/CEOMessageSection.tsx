@@ -18,7 +18,7 @@ export function CEOMessageSection() {
           <div className="relative h-32 w-32 overflow-hidden rounded-full sm:h-40 sm:w-40">
             <Image
               src="/images/Team/CEO.png"
-              alt="CEO"
+              alt="Founder"
               width={160}
               height={160}
               className="h-full w-full object-cover object-[center_30%] scale-110"
@@ -29,25 +29,18 @@ export function CEOMessageSection() {
               <Quote className="h-5 w-5 text-orange" aria-hidden />
             </div>
             <h2 className="font-serif text-2xl font-semibold text-charcoal sm:text-3xl">
-              Message From the CEO
+              Founder&apos;s Message
             </h2>
           </div>
           <div className="mt-8 space-y-5 text-lg leading-relaxed text-charcoal/80">
             <p>
-              Welcome to Vacation Vibez. Travel has the power to inspire,
-              connect cultures, and create lifelong memories.
+              When Vacation Vibes was founded, the vision was clear — to create a travel brand that goes beyond traditional tourism and focuses on experiences that truly matter.
             </p>
             <p>
-              Our goal is to make travel simple, enjoyable, and meaningful for
-              everyone who chooses to explore the world with us.
+              Travel has the power to change perspectives, build connections, and create stories that stay with us for a lifetime. At Vacation Vibes, our goal is to ensure every journey reflects that belief. We carefully design each travel experience to be authentic, inspiring, and memorable.
             </p>
             <p>
-              With our presence in Sri Lanka and the UAE, we combine local
-              expertise with global travel insight.
-            </p>
-            <p className="font-medium text-charcoal">
-              Thank you for trusting Vacation Vibez to be part of your travel
-              journey.
+              As we grow, our commitment remains the same — to connect travelers with meaningful destinations, support local communities, and deliver experiences that feel truly elevated.
             </p>
           </div>
         </motion.div>

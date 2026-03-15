@@ -157,7 +157,7 @@ export function Packages({ packages: dbPackages }: { packages?: PublicPackage[] 
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
               className="mt-3 text-base text-charcoal/70 sm:text-lg"
             >
-              Handcrafted Sri Lanka inbound tour packages designed around different travel styles and vibes.
+              Handcrafted Sri Lanka inbound tour packages designed around different travel styles and experiences.
             </motion.p>
           </div>
           <Link

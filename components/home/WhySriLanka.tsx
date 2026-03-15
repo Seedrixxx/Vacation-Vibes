@@ -104,7 +104,7 @@ export function WhySriLanka() {
                   role="presentation"
                 >
                   <Image
-                    src="/images/collage/tea.jpg"
+                    src="/images/experiences/tea.jpg"
                     alt="Ceylon tea plantations"
                     fill
                     className="object-cover"

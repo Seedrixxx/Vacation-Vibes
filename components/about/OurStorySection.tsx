@@ -38,19 +38,13 @@ export function OurStorySection() {
             </h2>
             <div className="mt-6 space-y-5 text-lg leading-relaxed text-charcoal/80">
               <p>
-                Vacation Vibez was founded with a passion for creating
-                unforgettable travel experiences and making travel planning
-                simple and enjoyable.
+                Vacation Vibes was created with a simple belief — that travel should be more than a trip; it should be an experience that stays with you long after the journey ends.
               </p>
               <p>
-                What began as a vision to showcase the beauty of Sri Lanka
-                gradually expanded to include travel experiences across the UAE
-                and other global destinations.
+                With Sri Lanka as our home and the world as our playground, Vacation Vibes designs journeys that connect travelers to culture, people, landscapes, and authentic local experiences. From the misty mountains of the hill country to the golden beaches of the coast, and from vibrant cities to peaceful heritage sites, we curate travel experiences that capture the true essence of every destination.
               </p>
               <p>
-                Today, Vacation Vibez focuses on designing seamless journeys
-                that allow travelers to explore the world comfortably while
-                creating memories that last a lifetime.
+                Our approach combines personalized service, trusted partnerships, and innovative travel solutions to ensure every journey feels effortless and inspiring. Whether exploring Sri Lanka or traveling abroad, Vacation Vibes delivers carefully curated travel experiences designed around what truly matters — discovery, connection, and lasting memories.
               </p>
             </div>
           </motion.div>

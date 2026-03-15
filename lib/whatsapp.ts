@@ -3,7 +3,7 @@
  * Use for agent handoff and customer contact.
  */
 export function getWhatsAppLink(phone?: string, text?: string): string {
-  const num = phone ?? process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "94771234567";
+  const num = phone ?? process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "94707155960";
   const clean = num.replace(/\D/g, "");
   const base = `https://wa.me/${clean}`;
   if (text?.trim()) {

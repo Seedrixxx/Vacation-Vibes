@@ -36,13 +36,8 @@ export function AboutHero() {
             className="max-w-2xl"
           >
             <h1 className="font-serif text-4xl font-semibold tracking-tight text-white drop-shadow-heroText sm:text-5xl lg:text-6xl">
-              Travel Made Easy With{" "}
-              <span className="italic text-gold">Vacation Vibez</span>
+              Experience, Elevated.
             </h1>
-            <p className="mt-5 text-lg text-white/90 drop-shadow-heroText lg:text-xl">
-              Your gateway to unforgettable journeys across Sri Lanka, the UAE,
-              and beyond.
-            </p>
           </motion.div>
         </Container>
       </div>

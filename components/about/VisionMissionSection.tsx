@@ -2,19 +2,24 @@
 
 import { motion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
-import { Eye, Compass } from "lucide-react";
+import { Eye, Compass, Target } from "lucide-react";
 import { staggerContainer, staggerItem, fadeUpTransition } from "@/lib/motion";
 
 const cards = [
   {
     icon: Eye,
     title: "Vision",
-    text: "To become a trusted global travel brand known for delivering seamless and inspiring travel experiences.",
+    text: "To become a globally trusted travel brand that connects people to authentic, sustainable, memorable, and emerging travel experiences.",
   },
   {
     icon: Compass,
     title: "Mission",
-    text: "To create personalized journeys through expert planning, reliable service, and deep destination knowledge.",
+    text: "To elevate global travel by blending human care, innovation, and seamless experiences that inspire and connect people across cultures.",
+  },
+  {
+    icon: Target,
+    title: "Purpose",
+    text: "To create meaningful travel experiences that enrich lives, support communities, and build trust while growing a sustainable global travel business.",
   },
 ];
 
@@ -27,7 +32,7 @@ export function VisionMissionSection() {
           initial="initial"
           whileInView="animate"
           viewport={{ once: true, amount: 0.2 }}
-          className="grid gap-8 md:grid-cols-2"
+          className="grid gap-8 md:grid-cols-3"
         >
           {cards.map((item) => {
             const Icon = item.icon;

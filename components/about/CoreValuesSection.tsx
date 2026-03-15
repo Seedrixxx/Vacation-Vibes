@@ -6,8 +6,8 @@ import {
   Heart,
   Globe,
   ShieldCheck,
-  Award,
-  Sparkles,
+  Briefcase,
+  TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 import { staggerContainer, staggerItem, fadeUpTransition } from "@/lib/motion";
@@ -15,33 +15,33 @@ import { staggerContainer, staggerItem, fadeUpTransition } from "@/lib/motion";
 const values: { icon: LucideIcon; title: string; description: string }[] = [
   {
     icon: Heart,
-    title: "Customer First",
+    title: "Customer First Always",
     description:
-      "Travelers are at the center of everything we do.",
+      "Every journey begins with understanding our travelers and delivering experiences that exceed expectations.",
+  },
+  {
+    icon: Briefcase,
+    title: "Ownership & Accountability",
+    description:
+      "We take responsibility for every detail of the travel experience.",
   },
   {
     icon: Globe,
-    title: "Authentic Experiences",
+    title: "Teamwork Across Borders",
     description:
-      "We design journeys that reflect real culture and destinations.",
+      "Collaboration with partners and communities allows us to create exceptional journeys.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Continuous Improvement",
+    description:
+      "We constantly refine our services and experiences to deliver better travel.",
   },
   {
     icon: ShieldCheck,
-    title: "Trust & Transparency",
+    title: "Integrity & Trust",
     description:
-      "Clear communication and honest service guide every booking.",
-  },
-  {
-    icon: Award,
-    title: "Excellence",
-    description:
-      "We continuously improve to exceed traveler expectations.",
-  },
-  {
-    icon: Sparkles,
-    title: "Passion for Travel",
-    description:
-      "Travel inspires everything we create.",
+      "Transparency and reliability guide everything we do.",
   },
 ];
 

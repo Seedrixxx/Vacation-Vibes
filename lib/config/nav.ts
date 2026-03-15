@@ -10,8 +10,11 @@ export const mainNav = [
 
 export const adminLoginHref = "/admin/login";
 
+/** Default WhatsApp number for forwarding chat: +94 70 715 5960 */
+const DEFAULT_WHATSAPP_NUMBER = "94707155960";
+
 export function getWhatsAppLink(phone?: string): string {
-  const num = phone || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "94771234567";
+  const num = phone || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || DEFAULT_WHATSAPP_NUMBER;
   const clean = num.replace(/\D/g, "");
   return `https://wa.me/${clean}`;
 }

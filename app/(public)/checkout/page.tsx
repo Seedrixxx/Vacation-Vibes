@@ -137,7 +137,7 @@ function CheckoutForm() {
               id="whatsapp"
               value={form.customerWhatsapp}
               onChange={(e) => setForm((p) => ({ ...p, customerWhatsapp: e.target.value }))}
-              placeholder="+94 77 123 4567"
+              placeholder="+94 70 715 5960"
             />
           </div>
           {error && (

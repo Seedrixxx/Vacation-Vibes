@@ -55,8 +55,16 @@ export function TeamMembersSection({ members }: { members: TeamMember[] }) {
       <div className="relative z-10">
         <div className="px-4 sm:px-6 lg:px-8">
           <h2 className="font-serif text-2xl font-semibold text-charcoal sm:text-3xl">
-            Team members
+            Our Team
           </h2>
+          <div className="mt-6 max-w-3xl space-y-4 text-lg leading-relaxed text-charcoal/80">
+            <p>
+              Behind every unforgettable journey is a passionate team of travel experts, planners, and destination specialists. The Vacation Vibes team works closely with global partners, local communities, and hospitality professionals to ensure every detail of the travel experience is thoughtfully curated.
+            </p>
+            <p>
+              With a shared passion for travel and service excellence, our team is dedicated to helping travelers explore the world with confidence, inspiration, and ease.
+            </p>
+          </div>
         </div>
 
         {/* Central profile card — top padding so half-circle overflow has room */}

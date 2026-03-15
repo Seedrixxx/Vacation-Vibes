@@ -1,5 +1,6 @@
 import { Mail, Phone } from "lucide-react";
 import { Container } from "@/components/ui/Container";
+import { getWhatsAppLink } from "@/lib/config/nav";
 import { footerColumns, footerContact, socialLinks } from "@/lib/homeData";
 
 const socialIconMap: Record<string, JSX.Element> = {
@@ -35,9 +36,9 @@ export function Footer() {
       aria-label="Site footer"
     >
       <Container className="py-16 lg:py-20">
-        <div className="grid gap-12 lg:grid-cols-6">
+        <div className="grid gap-12 text-center lg:grid-cols-6 lg:text-left">
           {/* Brand */}
-          <div className="lg:col-span-2">
+          <div className="flex flex-col items-center lg:col-span-2 lg:items-start">
             <a
               href="/"
               className="font-serif text-2xl font-semibold text-white"
@@ -50,7 +51,7 @@ export function Footer() {
             </p>
 
             {/* Social Links */}
-            <div className="mt-6 flex gap-4">
+            <div className="mt-6 flex justify-center gap-4 lg:justify-start">
               {socialLinks.map((social) => (
                 <a
                   key={social.name}
@@ -66,7 +67,7 @@ export function Footer() {
 
           {/* Footer Columns */}
           {footerColumns.map((column) => (
-            <div key={column.title}>
+            <div key={column.title} className="flex flex-col items-center lg:items-start">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white/90">
                 {column.title}
               </h3>
@@ -86,11 +87,11 @@ export function Footer() {
           ))}
 
           {/* Contact */}
-          <div>
+          <div className="flex flex-col items-center lg:items-start">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white/90">
               Contact
             </h3>
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 flex flex-col items-center space-y-4 lg:items-start">
               <a
                 href={`mailto:${footerContact.email}`}
                 className="flex items-center gap-3 text-sm text-white/60 transition-colors hover:text-gold"
@@ -102,9 +103,11 @@ export function Footer() {
                 <p className="text-xs font-medium uppercase tracking-wider text-white/50">
                   Sri Lanka
                 </p>
-                <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
+                <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 lg:justify-start">
                   <a
-                    href={`tel:${footerContact.sriLanka[0].replace(/\s/g, "")}`}
+                    href={getWhatsAppLink("94707155960")}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-gold"
                   >
                     <Phone className="h-3.5 w-3.5 shrink-0 text-white/50" aria-hidden />
@@ -112,7 +115,9 @@ export function Footer() {
                   </a>
                   <span className="text-white/40" aria-hidden>|</span>
                   <a
-                    href={`tel:${footerContact.sriLanka[1].replace(/\s/g, "")}`}
+                    href={getWhatsAppLink("94707155961")}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-gold"
                   >
                     <Phone className="h-3.5 w-3.5 shrink-0 text-white/50" aria-hidden />
@@ -142,7 +147,7 @@ export function Footer() {
             <p className="text-sm text-white/50">
               © {currentYear} Vacation Vibez. All rights reserved.
             </p>
-            <div className="flex gap-6">
+            <div className="flex justify-center gap-6 sm:justify-start">
               <a
                 href="/privacy"
                 className="text-sm text-white/50 transition-colors hover:text-white"
